@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="theme-color" content="#f5c400">
+  <meta
+    name="description"
+    content="SPEED-EDGE Logistics - Fast, safe and reliable delivery."
+  >
+
+  <title>SPEED-EDGE Logistics</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <main class="app">
+
+    <!-- Welcome Screen -->
+    <section id="welcomeScreen" class="screen">
+
+      <div class="hero">
+
+        <div class="logo">
+          SPEED<span>-EDGE</span>
+        </div>
+
+        <div class="delivery-icon">
+          🚚
+        </div>
+
+        <h1>Deliver with confidence.</h1>
+
+        <p>
+          Fast, safe and reliable delivery at your fingertips.
+        </p>
+
+      </div>
+
+      <div class="actions">
+
+        <button
+          id="signInBtn"
+          class="primary-btn"
+        >
+          Sign In
+        </button>
+
+        <button
+          id="createAccountBtn"
+          class="secondary-btn"
+        >
+          Create Account
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- Login Screen -->
+    <section id="loginScreen" class="screen hidden">
+
+      <button
+        id="backFromLogin"
+        class="back-btn"
+      >
+        ← Back
+      </button>
+
+      <div class="form-container">
+
+        <div class="logo small-logo">
+          SPEED<span>-EDGE</span>
+        </div>
+
+        <h2>Welcome back 👋</h2>
+
+        <p class="subtitle">
+          Sign in to manage your deliveries.
+        </p>
+
+        <form id="loginForm">
+
+          <label for="loginEmail">
+            Email address
+          </label>
+
+          <input
+            id="loginEmail"
+            type="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          >
+
+          <label for="loginPassword">
+            Password
+          </label>
+
+          <input
+            id="loginPassword"
+            type="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            required
+          >
+
+          <button
+            type="submit"
+            class="primary-btn"
+          >
+            Sign In
+          </button>
+
+          <p id="loginMessage" class="message"></p>
+
+        </form>
+
+      </div>
+
+    </section>
+
+
+    <!-- Create Account Screen -->
+    <section id="signupScreen" class="screen hidden">
+
+      <button
+        id="backFromSignup"
+        class="back-btn"
+      >
+        ← Back
+      </button>
+
+      <div class="form-container">
+
+        <div class="logo small-logo">
+          SPEED<span>-EDGE</span>
+        </div>
+
+        <h2>Create your account 🚀</h2>
+
+        <p class="subtitle">
+          Start sending packages with SPEED-EDGE.
+        </p>
+
+        <form id="signupForm">
+
+          <label for="signupName">
+            Full name
+          </label>
+
+          <input
+            id="signupName"
+            type="text"
+            placeholder="Your full name"
+            required
+          >
+
+          <label for="signupEmail">
+            Email address
+          </label>
+
+          <input
+            id="signupEmail"
+            type="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          >
+
+          <label for="signupPassword">
+            Password
+          </label>
+
+          <input
+            id="signupPassword"
+            type="password"
+            placeholder="Create a password"
+            autocomplete="new-password"
+            minlength="6"
+            required
+          >
+
+          <button
+            type="submit"
+            class="primary-btn"
+          >
+            Create Account
+          </button>
+
+          <p id="signupMessage" class="message"></p>
+
+        </form>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+
+</body>
+</html>
