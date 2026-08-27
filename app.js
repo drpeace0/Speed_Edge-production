@@ -1,3 +1,35 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// --------------------------------------------------
+// SPEED-EDGE FIREBASE CONFIGURATION
+// --------------------------------------------------
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAOh1ZWCr8zR-09Rol9JQa4Vnp07VMMA_U",
+  authDomain: "speed-edge-logistics.firebaseapp.com",
+  projectId: "speed-edge-logistics",
+  storageBucket: "speed-edge-logistics.firebasestorage.app",
+  messagingSenderId: "476368822322",
+  appId: "1:476368822322:web:c7e089ac7c418fa54f1c2b",
+  measurementId: "G-SY7CD8EP3K"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// --------------------------------------------------
+// GET HTML ELEMENTS
+// --------------------------------------------------
+
 const welcomeScreen = document.getElementById("welcomeScreen");
 const loginScreen = document.getElementById("loginScreen");
 const signupScreen = document.getElementById("signupScreen");
@@ -14,6 +46,17 @@ const signupForm = document.getElementById("signupForm");
 const loginMessage = document.getElementById("loginMessage");
 const signupMessage = document.getElementById("signupMessage");
 
+const loginEmail = document.getElementById("loginEmail");
+const loginPassword = document.getElementById("loginPassword");
+
+const signupName = document.getElementById("signupName");
+const signupEmail = document.getElementById("signupEmail");
+const signupPassword = document.getElementById("signupPassword");
+
+// --------------------------------------------------
+// SCREEN NAVIGATION
+// --------------------------------------------------
+
 function showScreen(screen) {
   welcomeScreen.classList.add("hidden");
   loginScreen.classList.add("hidden");
@@ -27,34 +70,202 @@ function showScreen(screen) {
   });
 }
 
+// --------------------------------------------------
+// OPEN LOGIN
+// --------------------------------------------------
+
 signInBtn.addEventListener("click", () => {
   loginMessage.textContent = "";
+  loginForm.reset();
+
   showScreen(loginScreen);
 });
 
+// --------------------------------------------------
+// OPEN SIGNUP
+// --------------------------------------------------
+
 createAccountBtn.addEventListener("click", () => {
   signupMessage.textContent = "";
+  signupForm.reset();
+
   showScreen(signupScreen);
 });
 
+// --------------------------------------------------
+// BACK BUTTONS
+// --------------------------------------------------
+
 backFromLogin.addEventListener("click", () => {
+  loginMessage.textContent = "";
   showScreen(welcomeScreen);
 });
 
 backFromSignup.addEventListener("click", () => {
+  signupMessage.textContent = "";
   showScreen(welcomeScreen);
 });
 
-loginForm.addEventListener("submit", (event) => {
+// --------------------------------------------------
+// FIREBASE ERROR TRANSLATION
+// --------------------------------------------------
+
+function getFriendlyError(error) {
+  switch (error.code) {
+    case "auth/email-already-in-use":
+      return "An account already exists with this email address.";
+
+    case "auth/invalid-email":
+      return "Please enter a valid email address.";
+
+    case "auth/weak-password":
+      return "Your password is too weak. Please use at least 6 characters.";
+
+    case "auth/invalid-credential":
+      return "The email or password is incorrect.";
+
+    case "auth/user-not-found":
+      return "No account was found with this email address.";
+
+    case "auth/wrong-password":
+      return "The password is incorrect.";
+
+    case "auth/network-request-failed":
+      return "Network error. Please check your internet connection and try again.";
+
+    case "auth/too-many-requests":
+      return "Too many attempts. Please wait and try again later.";
+
+    case "auth/operation-not-allowed":
+      return "Email/password authentication is not enabled in Firebase.";
+
+    default:
+      console.error("Firebase error:", error);
+      return "Something went wrong. Please try again.";
+  }
+}
+
+// --------------------------------------------------
+// CREATE ACCOUNT
+// --------------------------------------------------
+
+signupForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  loginMessage.textContent =
-    "Login interface is working. Firebase authentication will be connected next.";
+  signupMessage.textContent = "Creating your account...";
+  signupMessage.style.color = "";
+
+  const name = signupName.value.trim();
+  const email = signupEmail.value.trim();
+  const password = signupPassword.value;
+
+  if (!name) {
+    signupMessage.textContent = "Please enter your full name.";
+    return;
+  }
+
+  if (!email) {
+    signupMessage.textContent = "Please enter your email address.";
+    return;
+  }
+
+  if (password.length < 6) {
+    signupMessage.textContent =
+      "Your password must contain at least 6 characters.";
+    return;
+  }
+
+  try {
+    const userCredential =
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    await updateProfile(userCredential.user, {
+      displayName: name
+    });
+
+    console.log(
+      "SPEED-EDGE account created:",
+      userCredential.user.uid
+    );
+
+    signupMessage.textContent =
+      "Account created successfully! Welcome to SPEED-EDGE.";
+
+    signupMessage.style.color = "#166534";
+
+    setTimeout(() => {
+      showScreen(welcomeScreen);
+    }, 1500);
+
+  } catch (error) {
+    signupMessage.textContent = getFriendlyError(error);
+    signupMessage.style.color = "#b42318";
+  }
 });
 
-signupForm.addEventListener("submit", (event) => {
+// --------------------------------------------------
+// SIGN IN
+// --------------------------------------------------
+
+loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  signupMessage.textContent =
-    "Account creation interface is working. Firebase will be connected next.";
+  loginMessage.textContent = "Signing you in...";
+  loginMessage.style.color = "";
+
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value;
+
+  if (!email || !password) {
+    loginMessage.textContent =
+      "Please enter your email and password.";
+    return;
+  }
+
+  try {
+    const userCredential =
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    console.log(
+      "SPEED-EDGE user signed in:",
+      userCredential.user.uid
+    );
+
+    loginMessage.textContent =
+      "Login successful! Welcome back.";
+
+    loginMessage.style.color = "#166534";
+
+    setTimeout(() => {
+      showScreen(welcomeScreen);
+    }, 1500);
+
+  } catch (error) {
+    loginMessage.textContent = getFriendlyError(error);
+    loginMessage.style.color = "#b42318";
+  }
+});
+
+// --------------------------------------------------
+// AUTHENTICATION STATE
+// --------------------------------------------------
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log("Current SPEED-EDGE user:", {
+      uid: user.uid,
+      email: user.email,
+      name: user.displayName
+    });
+  } else {
+    console.log("No SPEED-EDGE user is signed in.");
+  }
 });
