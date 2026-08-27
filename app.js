@@ -8,7 +8,10 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+// ==================================================
 // SPEED-EDGE FIREBASE CONFIGURATION
+// ==================================================
+
 const firebaseConfig = {
   apiKey: "AIzaSyAOh1ZWCr8zR-09Rol9JQa4Vnp07VMMA_U",
   authDomain: "speed-edge-logistics.firebaseapp.com",
@@ -19,11 +22,17 @@ const firebaseConfig = {
   measurementId: "G-SY7CD8EP3K"
 };
 
-// Initialize Firebase
+// ==================================================
+// INITIALIZE FIREBASE
+// ==================================================
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Get HTML elements
+// ==================================================
+// GET HTML ELEMENTS
+// ==================================================
+
 const welcomeScreen = document.getElementById("welcomeScreen");
 const loginScreen = document.getElementById("loginScreen");
 const signupScreen = document.getElementById("signupScreen");
@@ -47,7 +56,10 @@ const signupName = document.getElementById("signupName");
 const signupEmail = document.getElementById("signupEmail");
 const signupPassword = document.getElementById("signupPassword");
 
-// Screen navigation
+// ==================================================
+// SCREEN NAVIGATION
+// ==================================================
+
 function showScreen(screen) {
   welcomeScreen.classList.add("hidden");
   loginScreen.classList.add("hidden");
@@ -61,50 +73,60 @@ function showScreen(screen) {
   });
 }
 
-// Sign In button
+// ==================================================
+// SIGN IN BUTTON
+// ==================================================
+
 signInBtn.addEventListener("click", () => {
   loginMessage.textContent = "";
   loginMessage.style.color = "";
+
   loginForm.reset();
 
   showScreen(loginScreen);
 });
 
-// Create Account button
+// ==================================================
+// CREATE ACCOUNT BUTTON
+// ==================================================
+
 createAccountBtn.addEventListener("click", () => {
   signupMessage.textContent = "";
   signupMessage.style.color = "";
+
   signupForm.reset();
 
   showScreen(signupScreen);
 });
 
-// Back buttons
+// ==================================================
+// BACK BUTTONS
+// ==================================================
+
 backFromLogin.addEventListener("click", () => {
   loginMessage.textContent = "";
+  loginMessage.style.color = "";
+
   showScreen(welcomeScreen);
 });
 
 backFromSignup.addEventListener("click", () => {
   signupMessage.textContent = "";
+  signupMessage.style.color = "";
+
   showScreen(welcomeScreen);
 });
 
-// Firebase error handling
+// ==================================================
+// FIREBASE ERROR HANDLING
+// ==================================================
+
 function getFriendlyError(error) {
   console.error("========== SPEED-EDGE FIREBASE ERROR ==========");
   console.error("Error code:", error.code);
   console.error("Error message:", error.message);
   console.error("Full error:", error);
   console.error("==============================================");
-
-  return (
-    "Firebase error: " +
-    (error.code || "unknown") +
-    " — " +
-    (error.message || "No additional information")
-  );
-}
 
   switch (error.code) {
     case "auth/email-already-in-use":
@@ -138,7 +160,7 @@ function getFriendlyError(error) {
       return "The Firebase API key is not valid or is restricted incorrectly.";
 
     case "auth/app-not-authorized":
-      return "This website is not authorized in Firebase.";
+      return "This website is not authorized in Firebase. Check Authorized Domains.";
 
     case "auth/invalid-api-key":
       return "The Firebase API key is invalid.";
@@ -147,11 +169,19 @@ function getFriendlyError(error) {
       return "Firebase returned an internal error. Please try again.";
 
     default:
-      return "Firebase error: " + (error.code || "unknown error");
+      return (
+        "Firebase error: " +
+        (error.code || "unknown") +
+        " — " +
+        (error.message || "No additional information")
+      );
   }
 }
 
-// Create Account
+// ==================================================
+// CREATE ACCOUNT
+// ==================================================
+
 signupForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -182,12 +212,11 @@ signupForm.addEventListener("submit", async (event) => {
   }
 
   try {
-    const userCredential =
-      await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
     await updateProfile(userCredential.user, {
       displayName: name
@@ -213,7 +242,10 @@ signupForm.addEventListener("submit", async (event) => {
   }
 });
 
-// Sign In
+// ==================================================
+// SIGN IN
+// ==================================================
+
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -232,12 +264,11 @@ loginForm.addEventListener("submit", async (event) => {
   }
 
   try {
-    const userCredential =
-      await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
     console.log(
       "SPEED-EDGE user signed in:",
@@ -259,7 +290,10 @@ loginForm.addEventListener("submit", async (event) => {
   }
 });
 
-// Authentication state
+// ==================================================
+// AUTHENTICATION STATE
+// ==================================================
+
 onAuthStateChanged(auth, (user) => {
   if (user) {
     console.log("Current SPEED-EDGE user:", {
