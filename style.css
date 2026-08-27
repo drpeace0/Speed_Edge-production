@@ -1,0 +1,205 @@
+:root {
+  --yellow: #f5c400;
+  --yellow-dark: #d9aa00;
+  --black: #111111;
+  --white: #ffffff;
+  --gray: #6f6f6f;
+  --light: #f7f7f7;
+  --border: #e5e5e5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--light);
+  color: var(--black);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app {
+  min-height: 100vh;
+  max-width: 520px;
+  margin: 0 auto;
+  background: var(--white);
+}
+
+.screen {
+  min-height: 100vh;
+  padding: 28px 22px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* BRAND */
+
+.logo {
+  font-size: 27px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.logo span {
+  color: var(--yellow-dark);
+}
+
+/* WELCOME */
+
+.hero {
+  min-height: 68vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.hero .logo {
+  align-self: flex-start;
+  margin-bottom: 45px;
+}
+
+.delivery-icon {
+  width: 150px;
+  height: 150px;
+  display: grid;
+  place-items: center;
+  background: #fff7cc;
+  border-radius: 50%;
+  font-size: 76px;
+  margin-bottom: 30px;
+}
+
+.hero h1 {
+  font-size: 36px;
+  line-height: 1.05;
+  margin: 0 0 15px;
+  letter-spacing: -1.5px;
+}
+
+.hero p {
+  max-width: 330px;
+  margin: 0;
+  color: var(--gray);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* BUTTONS */
+
+.actions {
+  display: grid;
+  gap: 12px;
+}
+
+.primary-btn,
+.secondary-btn {
+  width: 100%;
+  border: 0;
+  min-height: 54px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.primary-btn {
+  background: var(--yellow);
+  color: var(--black);
+}
+
+.secondary-btn {
+  background: var(--black);
+  color: var(--white);
+}
+
+.primary-btn:active,
+.secondary-btn:active {
+  transform: scale(0.98);
+}
+
+/* FORMS */
+
+.back-btn {
+  border: 0;
+  background: transparent;
+  padding: 5px 0;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 30px;
+}
+
+.form-container {
+  padding-top: 20px;
+}
+
+.form-container h2 {
+  font-size: 30px;
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  color: var(--gray);
+  line-height: 1.5;
+  margin: 0 0 32px;
+}
+
+form {
+  display: grid;
+  gap: 10px;
+}
+
+label {
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 8px;
+}
+
+input {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 15px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  outline: none;
+  background: var(--white);
+}
+
+input:focus {
+  border-color: var(--yellow-dark);
+  box-shadow: 0 0 0 3px #fff7cc;
+}
+
+form .primary-btn {
+  margin-top: 18px;
+}
+
+.message {
+  min-height: 20px;
+  margin: 5px 0 0;
+  text-align: center;
+  font-size: 13px;
+}
+
+@media (min-width: 700px) {
+  body {
+    background: #eeeeee;
+  }
+
+  .app {
+    min-height: 100vh;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
+  }
+}
