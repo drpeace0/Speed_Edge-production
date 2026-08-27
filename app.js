@@ -8,10 +8,9 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-
-// ============================================================
-// SPEED-EDGE — FIREBASE CONFIGURATION
-// ============================================================
+// ==================================================
+// SPEED-EDGE FIREBASE CONFIGURATION
+// ==================================================
 
 const firebaseConfig = {
   apiKey: "AIzaSyAOh1ZWCr8zR-09Rol9JQa4Vnp07VMMA_U",
@@ -23,101 +22,155 @@ const firebaseConfig = {
   measurementId: "G-SY7CD8EP3K"
 };
 
-
-// ============================================================
+// ==================================================
 // INITIALIZE FIREBASE
-// ============================================================
+// ==================================================
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+// ==================================================
+// START APP AFTER HTML IS READY
+// ==================================================
 
-// ============================================================
-// GET HTML ELEMENTS
-// ============================================================
+document.addEventListener("DOMContentLoaded", () => {
 
-const welcomeScreen = document.getElementById("welcomeScreen");
-const loginScreen = document.getElementById("loginScreen");
-const signupScreen = document.getElementById("signupScreen");
+  // ==================================================
+  // GET HTML ELEMENTS
+  // ==================================================
 
-const signInBtn = document.getElementById("signInBtn");
-const createAccountBtn = document.getElementById("createAccountBtn");
+  const welcomeScreen = document.getElementById("welcomeScreen");
+  const loginScreen = document.getElementById("loginScreen");
+  const signupScreen = document.getElementById("signupScreen");
 
-const backFromLogin = document.getElementById("backFromLogin");
-const backFromSignup = document.getElementById("backFromSignup");
+  const signInBtn = document.getElementById("signInBtn");
+  const createAccountBtn = document.getElementById("createAccountBtn");
 
-const loginForm = document.getElementById("loginForm");
-const signupForm = document.getElementById("signupForm");
+  const backFromLogin = document.getElementById("backFromLogin");
+  const backFromSignup = document.getElementById("backFromSignup");
 
-const loginMessage = document.getElementById("loginMessage");
-const signupMessage = document.getElementById("signupMessage");
+  const loginForm = document.getElementById("loginForm");
+  const signupForm = document.getElementById("signupForm");
 
-const loginEmail = document.getElementById("loginEmail");
-const loginPassword = document.getElementById("loginPassword");
+  const loginMessage = document.getElementById("loginMessage");
+  const signupMessage = document.getElementById("signupMessage");
 
-const signupName = document.getElementById("signupName");
-const signupEmail = document.getElementById("signupEmail");
-const signupPassword = document.getElementById("signupPassword");
+  const loginEmail = document.getElementById("loginEmail");
+  const loginPassword = document.getElementById("loginPassword");
 
+  const signupName = document.getElementById("signupName");
+  const signupEmail = document.getElementById("signupEmail");
+  const signupPassword = document.getElementById("signupPassword");
 
-// ============================================================
-// CHECK THAT REQUIRED HTML ELEMENTS EXIST
-// ============================================================
+  // ==================================================
+  // CHECK THAT REQUIRED HTML ELEMENTS EXIST
+  // ==================================================
 
-const requiredElements = {
-  welcomeScreen,
-  loginScreen,
-  signupScreen,
-  signInBtn,
-  createAccountBtn,
-  backFromLogin,
-  backFromSignup,
-  loginForm,
-  signupForm,
-  loginMessage,
-  signupMessage,
-  loginEmail,
-  loginPassword,
-  signupName,
-  signupEmail,
-  signupPassword
-};
+  if (
+    !welcomeScreen ||
+    !loginScreen ||
+    !signupScreen ||
+    !signInBtn ||
+    !createAccountBtn ||
+    !backFromLogin ||
+    !backFromSignup ||
+    !loginForm ||
+    !signupForm
+  ) {
+    console.error(
+      "SPEED-EDGE ERROR: One or more required HTML elements were not found."
+    );
 
-for (const [name, element] of Object.entries(requiredElements)) {
-  if (!element) {
-    console.error(`SPEED-EDGE: Missing HTML element: ${name}`);
-  }
-}
-
-
-// ============================================================
-// SCREEN NAVIGATION
-// ============================================================
-
-function showScreen(screen) {
-  if (!welcomeScreen || !loginScreen || !signupScreen || !screen) {
-    console.error("SPEED-EDGE: Screen navigation error.");
     return;
   }
 
-  welcomeScreen.classList.add("hidden");
-  loginScreen.classList.add("hidden");
-  signupScreen.classList.add("hidden");
+  // ==================================================
+  // SCREEN NAVIGATION
+  // ==================================================
 
-  screen.classList.remove("hidden");
+  function showScreen(screen) {
+    welcomeScreen.classList.add("hidden");
+    loginScreen.classList.add("hidden");
+    signupScreen.classList.add("hidden");
 
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
-}
+    screen.classList.remove("hidden");
 
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  }
 
-// ============================================================
-// OPEN LOGIN SCREEN
-// ============================================================
+  // ==================================================
+  // FIREBASE ERROR TRANSLATION
+  // ==================================================
 
-if (signInBtn) {
+  function getFriendlyError(error) {
+
+    console.error("======================================");
+    console.error("SPEED-EDGE FIREBASE ERROR");
+    console.error("Error code:", error.code);
+    console.error("Error message:", error.message);
+    console.error("Full error:", error);
+    console.error("======================================");
+
+    switch (error.code) {
+
+      case "auth/email-already-in-use":
+        return "An account already exists with this email address.";
+
+      case "auth/invalid-email":
+        return "Please enter a valid email address.";
+
+      case "auth/weak-password":
+        return "Your password is too weak. Please use at least 6 characters.";
+
+      case "auth/invalid-credential":
+        return "The email or password is incorrect.";
+
+      case "auth/user-not-found":
+        return "No account was found with this email address.";
+
+      case "auth/wrong-password":
+        return "The password is incorrect.";
+
+      case "auth/network-request-failed":
+        return "Firebase could not connect. Please check your internet connection and Firebase settings.";
+
+      case "auth/too-many-requests":
+        return "Too many attempts. Please wait and try again later.";
+
+      case "auth/operation-not-allowed":
+        return "Email/password authentication is not enabled in Firebase.";
+
+      case "auth/api-key-not-valid":
+        return "The Firebase API key is not valid.";
+
+      case "auth/app-not-authorized":
+        return "This website is not authorized in Firebase. Check Authorized Domains.";
+
+      case "auth/invalid-api-key":
+        return "The Firebase API key is invalid.";
+
+      case "auth/internal-error":
+        return "Firebase returned an internal error. Please try again.";
+
+      case "auth/unauthorized-domain":
+        return "This website domain is not authorized in Firebase.";
+
+      default:
+        return (
+          "Firebase error: " +
+          (error.code || "unknown") +
+          ". Please check Firebase settings."
+        );
+    }
+  }
+
+  // ==================================================
+  // OPEN LOGIN
+  // ==================================================
+
   signInBtn.addEventListener("click", () => {
 
     if (loginMessage) {
@@ -125,20 +178,15 @@ if (signInBtn) {
       loginMessage.style.color = "";
     }
 
-    if (loginForm) {
-      loginForm.reset();
-    }
+    loginForm.reset();
 
     showScreen(loginScreen);
   });
-}
 
+  // ==================================================
+  // OPEN CREATE ACCOUNT
+  // ==================================================
 
-// ============================================================
-// OPEN CREATE ACCOUNT SCREEN
-// ============================================================
-
-if (createAccountBtn) {
   createAccountBtn.addEventListener("click", () => {
 
     if (signupMessage) {
@@ -146,20 +194,15 @@ if (createAccountBtn) {
       signupMessage.style.color = "";
     }
 
-    if (signupForm) {
-      signupForm.reset();
-    }
+    signupForm.reset();
 
     showScreen(signupScreen);
   });
-}
 
+  // ==================================================
+  // BACK FROM LOGIN
+  // ==================================================
 
-// ============================================================
-// BACK FROM LOGIN
-// ============================================================
-
-if (backFromLogin) {
   backFromLogin.addEventListener("click", () => {
 
     if (loginMessage) {
@@ -167,16 +210,15 @@ if (backFromLogin) {
       loginMessage.style.color = "";
     }
 
+    loginForm.reset();
+
     showScreen(welcomeScreen);
   });
-}
 
+  // ==================================================
+  // BACK FROM SIGNUP
+  // ==================================================
 
-// ============================================================
-// BACK FROM SIGNUP
-// ============================================================
-
-if (backFromSignup) {
   backFromSignup.addEventListener("click", () => {
 
     if (signupMessage) {
@@ -184,120 +226,42 @@ if (backFromSignup) {
       signupMessage.style.color = "";
     }
 
+    signupForm.reset();
+
     showScreen(welcomeScreen);
   });
-}
 
-
-// ============================================================
-// FIREBASE ERROR HANDLING
-// ============================================================
-
-function getFriendlyError(error) {
-
-  console.error("==========================================");
-  console.error("SPEED-EDGE FIREBASE ERROR");
-  console.error("Error code:", error?.code);
-  console.error("Error message:", error?.message);
-  console.error("Full error:", error);
-  console.error("==========================================");
-
-  const code = error?.code || "unknown";
-  const message = error?.message || "No additional information.";
-
-  switch (code) {
-
-    case "auth/email-already-in-use":
-      return "An account already exists with this email address.";
-
-    case "auth/invalid-email":
-      return "Please enter a valid email address.";
-
-    case "auth/weak-password":
-      return "Your password is too weak. Please use at least 6 characters.";
-
-    case "auth/invalid-credential":
-      return "The email or password is incorrect.";
-
-    case "auth/user-not-found":
-      return "No account was found with this email address.";
-
-    case "auth/wrong-password":
-      return "The password is incorrect.";
-
-    case "auth/network-request-failed":
-      return "Firebase could not connect. Please check your internet connection and Firebase settings.";
-
-    case "auth/too-many-requests":
-      return "Too many attempts. Please wait and try again later.";
-
-    case "auth/operation-not-allowed":
-      return "Email/password authentication is not enabled in Firebase.";
-
-    case "auth/api-key-not-valid":
-      return "The Firebase API key is not valid or is restricted incorrectly.";
-
-    case "auth/invalid-api-key":
-      return "The Firebase API key is invalid.";
-
-    case "auth/app-not-authorized":
-      return "This website is not authorized in Firebase. Check Authorized domains.";
-
-    case "auth/unauthorized-domain":
-      return "This website domain is not authorized in Firebase.";
-
-    case "auth/internal-error":
-      return "Firebase returned an internal error. Please try again.";
-
-    case "auth/invalid-argument":
-      return "Firebase received invalid information. Please check the form.";
-
-    case "auth/missing-password":
-      return "Please enter your password.";
-
-    case "auth/missing-email":
-      return "Please enter your email address.";
-
-    default:
-      return `Firebase error: ${code} — ${message}`;
-  }
-}
-
-
-// ============================================================
-// CREATE ACCOUNT
-// ============================================================
-
-if (signupForm) {
+  // ==================================================
+  // CREATE ACCOUNT
+  // ==================================================
 
   signupForm.addEventListener("submit", async (event) => {
 
     event.preventDefault();
 
-    console.log("SPEED-EDGE: Create Account button pressed.");
+    signupMessage.textContent = "Creating your account...";
+    signupMessage.style.color = "";
 
-    if (signupMessage) {
-      signupMessage.textContent = "Creating your account...";
-      signupMessage.style.color = "";
-    }
+    const name = signupName.value.trim();
+    const email = signupEmail.value.trim();
+    const password = signupPassword.value;
 
-    const name = signupName?.value.trim() || "";
-    const email = signupEmail?.value.trim() || "";
-    const password = signupPassword?.value || "";
-
-
-    // --------------------------------------------------------
+    // ----------------------------------------------
     // VALIDATION
-    // --------------------------------------------------------
+    // ----------------------------------------------
 
     if (!name) {
-      signupMessage.textContent = "Please enter your full name.";
+      signupMessage.textContent =
+        "Please enter your full name.";
+
       signupMessage.style.color = "#b42318";
       return;
     }
 
     if (!email) {
-      signupMessage.textContent = "Please enter your email address.";
+      signupMessage.textContent =
+        "Please enter your email address.";
+
       signupMessage.style.color = "#b42318";
       return;
     }
@@ -305,19 +269,16 @@ if (signupForm) {
     if (password.length < 6) {
       signupMessage.textContent =
         "Your password must contain at least 6 characters.";
+
       signupMessage.style.color = "#b42318";
       return;
     }
 
-
-    // --------------------------------------------------------
+    // ----------------------------------------------
     // CREATE FIREBASE ACCOUNT
-    // --------------------------------------------------------
+    // ----------------------------------------------
 
     try {
-
-      console.log("SPEED-EDGE: Connecting to Firebase...");
-      console.log("Email:", email);
 
       const userCredential =
         await createUserWithEmailAndPassword(
@@ -326,88 +287,58 @@ if (signupForm) {
           password
         );
 
-
-      // ------------------------------------------------------
-      // SAVE USER'S NAME
-      // ------------------------------------------------------
+      // --------------------------------------------
+      // SAVE FULL NAME
+      // --------------------------------------------
 
       await updateProfile(userCredential.user, {
         displayName: name
       });
 
-
       console.log(
-        "SPEED-EDGE: Account successfully created."
-      );
-
-      console.log(
-        "User UID:",
+        "SPEED-EDGE ACCOUNT CREATED:",
         userCredential.user.uid
       );
 
+      signupMessage.textContent =
+        "Account created successfully! Welcome to SPEED-EDGE.";
 
-      if (signupMessage) {
-        signupMessage.textContent =
-          "Account created successfully! Welcome to SPEED-EDGE.";
+      signupMessage.style.color = "#166534";
 
-        signupMessage.style.color = "#166534";
-      }
-
-
-      // ------------------------------------------------------
+      // --------------------------------------------
       // RETURN TO WELCOME SCREEN
-      // ------------------------------------------------------
+      // --------------------------------------------
 
       setTimeout(() => {
         showScreen(welcomeScreen);
       }, 1500);
 
+    } catch (error) {
+
+      signupMessage.textContent =
+        getFriendlyError(error);
+
+      signupMessage.style.color = "#b42318";
     }
-
-    catch (error) {
-
-      console.error(
-        "SPEED-EDGE: Account creation failed.",
-        error
-      );
-
-      if (signupMessage) {
-        signupMessage.textContent =
-          getFriendlyError(error);
-
-        signupMessage.style.color = "#b42318";
-      }
-    }
-
   });
 
-}
-
-
-// ============================================================
-// SIGN IN
-// ============================================================
-
-if (loginForm) {
+  // ==================================================
+  // SIGN IN
+  // ==================================================
 
   loginForm.addEventListener("submit", async (event) => {
 
     event.preventDefault();
 
-    console.log("SPEED-EDGE: Sign In button pressed.");
+    loginMessage.textContent = "Signing you in...";
+    loginMessage.style.color = "";
 
-    if (loginMessage) {
-      loginMessage.textContent = "Signing you in...";
-      loginMessage.style.color = "";
-    }
+    const email = loginEmail.value.trim();
+    const password = loginPassword.value;
 
-    const email = loginEmail?.value.trim() || "";
-    const password = loginPassword?.value || "";
-
-
-    // --------------------------------------------------------
+    // ----------------------------------------------
     // VALIDATION
-    // --------------------------------------------------------
+    // ----------------------------------------------
 
     if (!email || !password) {
 
@@ -419,14 +350,11 @@ if (loginForm) {
       return;
     }
 
-
-    // --------------------------------------------------------
+    // ----------------------------------------------
     // SIGN IN
-    // --------------------------------------------------------
+    // ----------------------------------------------
 
     try {
-
-      console.log("SPEED-EDGE: Connecting to Firebase...");
 
       const userCredential =
         await signInWithEmailAndPassword(
@@ -435,77 +363,49 @@ if (loginForm) {
           password
         );
 
-
       console.log(
-        "SPEED-EDGE: User successfully signed in."
-      );
-
-      console.log(
-        "User UID:",
+        "SPEED-EDGE USER SIGNED IN:",
         userCredential.user.uid
       );
 
+      loginMessage.textContent =
+        "Login successful! Welcome back.";
 
-      if (loginMessage) {
-
-        loginMessage.textContent =
-          "Login successful! Welcome back.";
-
-        loginMessage.style.color = "#166534";
-      }
-
-
-      // ------------------------------------------------------
-      // RETURN TO WELCOME SCREEN
-      // ------------------------------------------------------
+      loginMessage.style.color = "#166534";
 
       setTimeout(() => {
         showScreen(welcomeScreen);
       }, 1500);
 
+    } catch (error) {
+
+      loginMessage.textContent =
+        getFriendlyError(error);
+
+      loginMessage.style.color = "#b42318";
     }
-
-    catch (error) {
-
-      console.error(
-        "SPEED-EDGE: Sign in failed.",
-        error
-      );
-
-      if (loginMessage) {
-
-        loginMessage.textContent =
-          getFriendlyError(error);
-
-        loginMessage.style.color = "#b42318";
-      }
-    }
-
   });
 
-}
+  // ==================================================
+  // AUTHENTICATION STATE
+  // ==================================================
 
+  onAuthStateChanged(auth, (user) => {
 
-// ============================================================
-// FIREBASE AUTHENTICATION STATE
-// ============================================================
+    if (user) {
 
-onAuthStateChanged(auth, (user) => {
+      console.log("Current SPEED-EDGE user:", {
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName
+      });
 
-  if (user) {
+    } else {
 
-    console.log("==========================================");
-    console.log("SPEED-EDGE: USER IS SIGNED IN");
-    console.log("UID:", user.uid);
-    console.log("Email:", user.email);
-    console.log("Name:", user.displayName);
-    console.log("==========================================");
-
-  } else {
-
-    console.log(
-      "SPEED-EDGE: No user is currently signed in."
-    );
-  }
+      console.log(
+        "No SPEED-EDGE user is currently signed in."
+      );
+    }
+  });
 
 });
