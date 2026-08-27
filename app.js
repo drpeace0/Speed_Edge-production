@@ -92,7 +92,19 @@ backFromSignup.addEventListener("click", () => {
 
 // Firebase error handling
 function getFriendlyError(error) {
-  console.error("SPEED-EDGE Firebase error:", error);
+  console.error("========== SPEED-EDGE FIREBASE ERROR ==========");
+  console.error("Error code:", error.code);
+  console.error("Error message:", error.message);
+  console.error("Full error:", error);
+  console.error("==============================================");
+
+  return (
+    "Firebase error: " +
+    (error.code || "unknown") +
+    " — " +
+    (error.message || "No additional information")
+  );
+}
 
   switch (error.code) {
     case "auth/email-already-in-use":
