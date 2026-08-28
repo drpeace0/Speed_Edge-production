@@ -30,18 +30,22 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 // ==================================================
-// START APP AFTER HTML IS READY
+// START AFTER HTML IS READY
 // ==================================================
 
 document.addEventListener("DOMContentLoaded", () => {
 
   // ==================================================
-  // GET HTML ELEMENTS
+  // GET AUTHENTICATION SCREENS
   // ==================================================
 
   const welcomeScreen = document.getElementById("welcomeScreen");
   const loginScreen = document.getElementById("loginScreen");
   const signupScreen = document.getElementById("signupScreen");
+
+  // ==================================================
+  // GET BUTTONS
+  // ==================================================
 
   const signInBtn = document.getElementById("signInBtn");
   const createAccountBtn = document.getElementById("createAccountBtn");
@@ -49,51 +53,106 @@ document.addEventListener("DOMContentLoaded", () => {
   const backFromLogin = document.getElementById("backFromLogin");
   const backFromSignup = document.getElementById("backFromSignup");
 
+  // ==================================================
+  // GET FORMS
+  // ==================================================
+
   const loginForm = document.getElementById("loginForm");
   const signupForm = document.getElementById("signupForm");
+
+  // ==================================================
+  // GET MESSAGES
+  // ==================================================
 
   const loginMessage = document.getElementById("loginMessage");
   const signupMessage = document.getElementById("signupMessage");
 
+  // ==================================================
+  // GET LOGIN INPUTS
+  // ==================================================
+
   const loginEmail = document.getElementById("loginEmail");
   const loginPassword = document.getElementById("loginPassword");
+
+  // ==================================================
+  // GET SIGNUP INPUTS
+  // ==================================================
 
   const signupName = document.getElementById("signupName");
   const signupEmail = document.getElementById("signupEmail");
   const signupPassword = document.getElementById("signupPassword");
 
   // ==================================================
-  // CHECK THAT REQUIRED HTML ELEMENTS EXIST
+  // FIND MAIN SPEED-EDGE INTERFACE
+  // ==================================================
+  //
+  // The code checks several possible IDs.
+  // This allows the app to work with different
+  // dashboard/main-screen names.
+  //
   // ==================================================
 
-  if (
-    !welcomeScreen ||
-    !loginScreen ||
-    !signupScreen ||
-    !signInBtn ||
-    !createAccountBtn ||
-    !backFromLogin ||
-    !backFromSignup ||
-    !loginForm ||
-    !signupForm
-  ) {
-    console.error(
-      "SPEED-EDGE ERROR: One or more required HTML elements were not found."
+  const possibleMainScreens = [
+    "dashboardScreen",
+    "mainScreen",
+    "appScreen",
+    "homeScreen",
+    "dashboard",
+    "mainInterface",
+    "mainApp",
+    "appInterface"
+  ];
+
+  function findMainScreen() {
+
+    for (const id of possibleMainScreens) {
+
+      const element = document.getElementById(id);
+
+      if (element) {
+        console.log(
+          "SPEED-EDGE main interface found:",
+          id
+        );
+
+        return element;
+      }
+    }
+
+    console.warn(
+      "SPEED-EDGE: No main interface ID was found."
     );
 
-    return;
+    return null;
   }
 
   // ==================================================
-  // SCREEN NAVIGATION
+  // SHOW AUTH SCREEN
   // ==================================================
 
   function showScreen(screen) {
-    welcomeScreen.classList.add("hidden");
-    loginScreen.classList.add("hidden");
-    signupScreen.classList.add("hidden");
 
-    screen.classList.remove("hidden");
+    if (welcomeScreen) {
+      welcomeScreen.classList.add("hidden");
+    }
+
+    if (loginScreen) {
+      loginScreen.classList.add("hidden");
+    }
+
+    if (signupScreen) {
+      signupScreen.classList.add("hidden");
+    }
+
+    const mainScreen = findMainScreen();
+
+    if (mainScreen) {
+      mainScreen.classList.add("hidden");
+    }
+
+    if (screen) {
+      screen.classList.remove("hidden");
+    }
 
     window.scrollTo({
       top: 0,
@@ -102,17 +161,165 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==================================================
-  // FIREBASE ERROR TRANSLATION
+  // SHOW MAIN INTERFACE
+  // ==================================================
+
+  function showMainInterface() {
+
+    const mainScreen = findMainScreen();
+
+    // ----------------------------------------------
+    // Hide authentication screens
+    // ----------------------------------------------
+
+    if (welcomeScreen) {
+      welcomeScreen.classList.add("hidden");
+    }
+
+    if (loginScreen) {
+      loginScreen.classList.add("hidden");
+    }
+
+    if (signupScreen) {
+      signupScreen.classList.add("hidden");
+    }
+
+    // ----------------------------------------------
+    // Show main application
+    // ----------------------------------------------
+
+    if (mainScreen) {
+
+      mainScreen.classList.remove("hidden");
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+      console.log(
+        "SPEED-EDGE: Main interface opened successfully."
+      );
+
+      return true;
+    }
+
+    // ----------------------------------------------
+    // If no main screen exists yet
+    // ----------------------------------------------
+
+    console.warn(
+      "SPEED-EDGE: Login succeeded, but no main interface was found in index.html."
+    );
+
+    if (welcomeScreen) {
+      welcomeScreen.classList.remove("hidden");
+    }
+
+    return false;
+  }
+
+  // ==================================================
+  // OPEN LOGIN
+  // ==================================================
+
+  if (signInBtn) {
+
+    signInBtn.addEventListener("click", () => {
+
+      if (loginMessage) {
+        loginMessage.textContent = "";
+        loginMessage.style.color = "";
+      }
+
+      if (loginForm) {
+        loginForm.reset();
+      }
+
+      showScreen(loginScreen);
+    });
+  }
+
+  // ==================================================
+  // OPEN CREATE ACCOUNT
+  // ==================================================
+
+  if (createAccountBtn) {
+
+    createAccountBtn.addEventListener("click", () => {
+
+      if (signupMessage) {
+        signupMessage.textContent = "";
+        signupMessage.style.color = "";
+      }
+
+      if (signupForm) {
+        signupForm.reset();
+      }
+
+      showScreen(signupScreen);
+    });
+  }
+
+  // ==================================================
+  // BACK FROM LOGIN
+  // ==================================================
+
+  if (backFromLogin) {
+
+    backFromLogin.addEventListener("click", () => {
+
+      if (loginMessage) {
+        loginMessage.textContent = "";
+        loginMessage.style.color = "";
+      }
+
+      if (loginForm) {
+        loginForm.reset();
+      }
+
+      showScreen(welcomeScreen);
+    });
+  }
+
+  // ==================================================
+  // BACK FROM SIGNUP
+  // ==================================================
+
+  if (backFromSignup) {
+
+    backFromSignup.addEventListener("click", () => {
+
+      if (signupMessage) {
+        signupMessage.textContent = "";
+        signupMessage.style.color = "";
+      }
+
+      if (signupForm) {
+        signupForm.reset();
+      }
+
+      showScreen(welcomeScreen);
+    });
+  }
+
+  // ==================================================
+  // FIREBASE ERROR HANDLING
   // ==================================================
 
   function getFriendlyError(error) {
 
-    console.error("======================================");
-    console.error("SPEED-EDGE FIREBASE ERROR");
+    console.error(
+      "========== SPEED-EDGE FIREBASE ERROR =========="
+    );
+
     console.error("Error code:", error.code);
     console.error("Error message:", error.message);
     console.error("Full error:", error);
-    console.error("======================================");
+
+    console.error(
+      "==============================================="
+    );
 
     switch (error.code) {
 
@@ -146,17 +353,17 @@ document.addEventListener("DOMContentLoaded", () => {
       case "auth/api-key-not-valid":
         return "The Firebase API key is not valid.";
 
-      case "auth/app-not-authorized":
-        return "This website is not authorized in Firebase. Check Authorized Domains.";
-
       case "auth/invalid-api-key":
         return "The Firebase API key is invalid.";
 
-      case "auth/internal-error":
-        return "Firebase returned an internal error. Please try again.";
+      case "auth/app-not-authorized":
+        return "This website is not authorized in Firebase.";
 
       case "auth/unauthorized-domain":
         return "This website domain is not authorized in Firebase.";
+
+      case "auth/internal-error":
+        return "Firebase returned an internal error. Please try again.";
 
       default:
         return (
@@ -168,223 +375,227 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==================================================
-  // OPEN LOGIN
-  // ==================================================
-
-  signInBtn.addEventListener("click", () => {
-
-    if (loginMessage) {
-      loginMessage.textContent = "";
-      loginMessage.style.color = "";
-    }
-
-    loginForm.reset();
-
-    showScreen(loginScreen);
-  });
-
-  // ==================================================
-  // OPEN CREATE ACCOUNT
-  // ==================================================
-
-  createAccountBtn.addEventListener("click", () => {
-
-    if (signupMessage) {
-      signupMessage.textContent = "";
-      signupMessage.style.color = "";
-    }
-
-    signupForm.reset();
-
-    showScreen(signupScreen);
-  });
-
-  // ==================================================
-  // BACK FROM LOGIN
-  // ==================================================
-
-  backFromLogin.addEventListener("click", () => {
-
-    if (loginMessage) {
-      loginMessage.textContent = "";
-      loginMessage.style.color = "";
-    }
-
-    loginForm.reset();
-
-    showScreen(welcomeScreen);
-  });
-
-  // ==================================================
-  // BACK FROM SIGNUP
-  // ==================================================
-
-  backFromSignup.addEventListener("click", () => {
-
-    if (signupMessage) {
-      signupMessage.textContent = "";
-      signupMessage.style.color = "";
-    }
-
-    signupForm.reset();
-
-    showScreen(welcomeScreen);
-  });
-
-  // ==================================================
   // CREATE ACCOUNT
   // ==================================================
 
-  signupForm.addEventListener("submit", async (event) => {
+  if (signupForm) {
 
-    event.preventDefault();
+    signupForm.addEventListener(
+      "submit",
+      async (event) => {
 
-    signupMessage.textContent = "Creating your account...";
-    signupMessage.style.color = "";
+        event.preventDefault();
 
-    const name = signupName.value.trim();
-    const email = signupEmail.value.trim();
-    const password = signupPassword.value;
+        if (signupMessage) {
+          signupMessage.textContent =
+            "Creating your account...";
 
-    // ----------------------------------------------
-    // VALIDATION
-    // ----------------------------------------------
+          signupMessage.style.color = "";
+        }
 
-    if (!name) {
-      signupMessage.textContent =
-        "Please enter your full name.";
+        const name =
+          signupName ? signupName.value.trim() : "";
 
-      signupMessage.style.color = "#b42318";
-      return;
-    }
+        const email =
+          signupEmail ? signupEmail.value.trim() : "";
 
-    if (!email) {
-      signupMessage.textContent =
-        "Please enter your email address.";
+        const password =
+          signupPassword ? signupPassword.value : "";
 
-      signupMessage.style.color = "#b42318";
-      return;
-    }
+        // --------------------------------------------
+        // VALIDATE NAME
+        // --------------------------------------------
 
-    if (password.length < 6) {
-      signupMessage.textContent =
-        "Your password must contain at least 6 characters.";
+        if (!name) {
 
-      signupMessage.style.color = "#b42318";
-      return;
-    }
+          signupMessage.textContent =
+            "Please enter your full name.";
 
-    // ----------------------------------------------
-    // CREATE FIREBASE ACCOUNT
-    // ----------------------------------------------
+          signupMessage.style.color = "#b42318";
 
-    try {
+          return;
+        }
 
-      const userCredential =
-        await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
+        // --------------------------------------------
+        // VALIDATE EMAIL
+        // --------------------------------------------
 
-      // --------------------------------------------
-      // SAVE FULL NAME
-      // --------------------------------------------
+        if (!email) {
 
-      await updateProfile(userCredential.user, {
-        displayName: name
-      });
+          signupMessage.textContent =
+            "Please enter your email address.";
 
-      console.log(
-        "SPEED-EDGE ACCOUNT CREATED:",
-        userCredential.user.uid
-      );
+          signupMessage.style.color = "#b42318";
 
-      signupMessage.textContent =
-        "Account created successfully! Welcome to SPEED-EDGE.";
+          return;
+        }
 
-      signupMessage.style.color = "#166534";
+        // --------------------------------------------
+        // VALIDATE PASSWORD
+        // --------------------------------------------
 
-      // --------------------------------------------
-      // RETURN TO WELCOME SCREEN
-      // --------------------------------------------
+        if (password.length < 6) {
 
-      setTimeout(() => {
-        showScreen(welcomeScreen);
-      }, 1500);
+          signupMessage.textContent =
+            "Your password must contain at least 6 characters.";
 
-    } catch (error) {
+          signupMessage.style.color = "#b42318";
 
-      signupMessage.textContent =
-        getFriendlyError(error);
+          return;
+        }
 
-      signupMessage.style.color = "#b42318";
-    }
-  });
+        // --------------------------------------------
+        // CREATE FIREBASE ACCOUNT
+        // --------------------------------------------
+
+        try {
+
+          const userCredential =
+            await createUserWithEmailAndPassword(
+              auth,
+              email,
+              password
+            );
+
+          // ------------------------------------------
+          // SAVE USER NAME
+          // ------------------------------------------
+
+          await updateProfile(
+            userCredential.user,
+            {
+              displayName: name
+            }
+          );
+
+          console.log(
+            "SPEED-EDGE account created:",
+            userCredential.user.uid
+          );
+
+          if (signupMessage) {
+
+            signupMessage.textContent =
+              "Account created successfully! Welcome to SPEED-EDGE.";
+
+            signupMessage.style.color = "#166534";
+          }
+
+          // ------------------------------------------
+          // OPEN MAIN INTERFACE
+          // ------------------------------------------
+
+          setTimeout(() => {
+            showMainInterface();
+          }, 1000);
+
+        } catch (error) {
+
+          if (signupMessage) {
+
+            signupMessage.textContent =
+              getFriendlyError(error);
+
+            signupMessage.style.color = "#b42318";
+          }
+        }
+      }
+    );
+  }
 
   // ==================================================
   // SIGN IN
   // ==================================================
 
-  loginForm.addEventListener("submit", async (event) => {
+  if (loginForm) {
 
-    event.preventDefault();
+    loginForm.addEventListener(
+      "submit",
+      async (event) => {
 
-    loginMessage.textContent = "Signing you in...";
-    loginMessage.style.color = "";
+        event.preventDefault();
 
-    const email = loginEmail.value.trim();
-    const password = loginPassword.value;
+        if (loginMessage) {
 
-    // ----------------------------------------------
-    // VALIDATION
-    // ----------------------------------------------
+          loginMessage.textContent =
+            "Signing you in...";
 
-    if (!email || !password) {
+          loginMessage.style.color = "";
+        }
 
-      loginMessage.textContent =
-        "Please enter your email and password.";
+        const email =
+          loginEmail ? loginEmail.value.trim() : "";
 
-      loginMessage.style.color = "#b42318";
+        const password =
+          loginPassword ? loginPassword.value : "";
 
-      return;
-    }
+        // --------------------------------------------
+        // VALIDATE
+        // --------------------------------------------
 
-    // ----------------------------------------------
-    // SIGN IN
-    // ----------------------------------------------
+        if (!email || !password) {
 
-    try {
+          if (loginMessage) {
 
-      const userCredential =
-        await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
+            loginMessage.textContent =
+              "Please enter your email and password.";
 
-      console.log(
-        "SPEED-EDGE USER SIGNED IN:",
-        userCredential.user.uid
-      );
+            loginMessage.style.color = "#b42318";
+          }
 
-      loginMessage.textContent =
-        "Login successful! Welcome back.";
+          return;
+        }
 
-      loginMessage.style.color = "#166534";
+        // --------------------------------------------
+        // SIGN IN
+        // --------------------------------------------
 
-      setTimeout(() => {
-        showScreen(welcomeScreen);
-      }, 1500);
+        try {
 
-    } catch (error) {
+          const userCredential =
+            await signInWithEmailAndPassword(
+              auth,
+              email,
+              password
+            );
 
-      loginMessage.textContent =
-        getFriendlyError(error);
+          console.log(
+            "SPEED-EDGE user signed in:",
+            userCredential.user.uid
+          );
 
-      loginMessage.style.color = "#b42318";
-    }
-  });
+          if (loginMessage) {
+
+            loginMessage.textContent =
+              "Login successful! Welcome back.";
+
+            loginMessage.style.color = "#166534";
+          }
+
+          // ------------------------------------------
+          // IMPORTANT:
+          // DO NOT RETURN TO WELCOME SCREEN.
+          //
+          // Open the main SPEED-EDGE interface.
+          // ------------------------------------------
+
+          setTimeout(() => {
+            showMainInterface();
+          }, 800);
+
+        } catch (error) {
+
+          if (loginMessage) {
+
+            loginMessage.textContent =
+              getFriendlyError(error);
+
+            loginMessage.style.color = "#b42318";
+          }
+        }
+      }
+    );
+  }
 
   // ==================================================
   // AUTHENTICATION STATE
@@ -394,11 +605,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (user) {
 
-      console.log("Current SPEED-EDGE user:", {
-        uid: user.uid,
-        email: user.email,
-        name: user.displayName
-      });
+      console.log(
+        "SPEED-EDGE authenticated user:",
+        {
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName
+        }
+      );
 
     } else {
 
