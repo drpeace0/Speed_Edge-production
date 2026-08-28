@@ -1,6 +1,6 @@
 /* =========================================================
    SPEED-EDGE LOGISTICS
-   Firebase Authentication + Dashboard
+   Firebase Authentication + Persistent Login + Dashboard
    ========================================================= */
 
 import { initializeApp } from
@@ -8,6 +8,8 @@ import { initializeApp } from
 
 import {
   getAuth,
+  setPersistence,
+  browserLocalPersistence,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
@@ -36,15 +38,18 @@ const firebaseConfig = {
    INITIALIZE FIREBASE
    ========================================================= */
 
-let app;
-let auth;
+let app = null;
+let auth = null;
 
 try {
 
   app = initializeApp(firebaseConfig);
+
   auth = getAuth(app);
 
-  console.log("SPEED-EDGE Firebase initialized successfully.");
+  console.log(
+    "SPEED-EDGE Firebase initialized successfully."
+  );
 
 } catch (error) {
 
@@ -53,16 +58,11 @@ try {
     error
   );
 
-  alert(
-    "SPEED-EDGE could not initialize Firebase. " +
-    "Please check the Firebase configuration."
-  );
-
 }
 
 
 /* =========================================================
-   GET HTML ELEMENTS
+   HTML ELEMENTS
    ========================================================= */
 
 const welcomeScreen =
@@ -144,41 +144,58 @@ const profileUid =
 
 
 /* =========================================================
+   CHECK DASHBOARD
+   ========================================================= */
+
+if (!dashboardScreen) {
+
+  console.error(
+    "SPEED-EDGE ERROR: #dashboardScreen was not found in index.html."
+  );
+
+}
+
+
+/* =========================================================
    SCREEN NAVIGATION
    ========================================================= */
 
 function hideAllScreens() {
 
-  if (welcomeScreen) {
-    welcomeScreen.classList.add("hidden");
-  }
+  [
+    welcomeScreen,
+    loginScreen,
+    signupScreen,
+    dashboardScreen
+  ].forEach((screen) => {
 
-  if (loginScreen) {
-    loginScreen.classList.add("hidden");
-  }
+    if (screen) {
+      screen.classList.add("hidden");
+    }
 
-  if (signupScreen) {
-    signupScreen.classList.add("hidden");
-  }
-
-  if (dashboardScreen) {
-    dashboardScreen.classList.add("hidden");
-  }
+  });
 
 }
 
 
 function showScreen(screen) {
 
+  if (!screen) {
+
+    console.error(
+      "SPEED-EDGE: Tried to display a screen that does not exist."
+    );
+
+    return;
+  }
+
   hideAllScreens();
 
-  if (screen) {
-    screen.classList.remove("hidden");
-  }
+  screen.classList.remove("hidden");
 
   window.scrollTo({
     top: 0,
-    behavior: "smooth"
+    behavior: "instant"
   });
 
 }
@@ -249,6 +266,7 @@ function getFriendlyError(error) {
         "Firebase error: " +
         (error?.code || "unknown error")
       );
+
   }
 
 }
@@ -278,7 +296,7 @@ if (signInBtn) {
 
 
 /* =========================================================
-   WELCOME → SIGN UP
+   WELCOME → CREATE ACCOUNT
    ========================================================= */
 
 if (createAccountBtn) {
@@ -301,7 +319,7 @@ if (createAccountBtn) {
 
 
 /* =========================================================
-   BACK FROM LOGIN
+   BACK → WELCOME
    ========================================================= */
 
 if (backFromLogin) {
@@ -318,10 +336,6 @@ if (backFromLogin) {
 
 }
 
-
-/* =========================================================
-   BACK FROM SIGNUP
-   ========================================================= */
 
 if (backFromSignup) {
 
@@ -348,10 +362,15 @@ if (signupForm) {
 
     event.preventDefault();
 
+
     if (!auth) {
+
       signupMessage.textContent =
         "Firebase is not initialized.";
-      signupMessage.style.color = "#b42318";
+
+      signupMessage.style.color =
+        "#b42318";
+
       return;
     }
 
@@ -371,7 +390,8 @@ if (signupForm) {
       signupMessage.textContent =
         "Please enter your full name.";
 
-      signupMessage.style.color = "#b42318";
+      signupMessage.style.color =
+        "#b42318";
 
       return;
     }
@@ -382,7 +402,8 @@ if (signupForm) {
       signupMessage.textContent =
         "Please enter your email address.";
 
-      signupMessage.style.color = "#b42318";
+      signupMessage.style.color =
+        "#b42318";
 
       return;
     }
@@ -393,7 +414,8 @@ if (signupForm) {
       signupMessage.textContent =
         "Your password must contain at least 6 characters.";
 
-      signupMessage.style.color = "#b42318";
+      signupMessage.style.color =
+        "#b42318";
 
       return;
     }
@@ -402,10 +424,16 @@ if (signupForm) {
     signupMessage.textContent =
       "Creating your account...";
 
-    signupMessage.style.color = "#555";
+    signupMessage.style.color =
+      "#555";
 
 
     try {
+
+      /*
+       Create Firebase account.
+      Firebase automatically signs the new user in.
+      */
 
       const userCredential =
         await createUserWithEmailAndPassword(
@@ -418,6 +446,10 @@ if (signupForm) {
       const user =
         userCredential.user;
 
+
+      /*
+       Save user's name to Firebase Authentication.
+      */
 
       if (name) {
 
@@ -442,16 +474,11 @@ if (signupForm) {
 
 
       /*
-       IMPORTANT:
+       DO NOT manually navigate.
 
-       We DO NOT manually send the user back
-       to the welcome screen.
-
-       Firebase's onAuthStateChanged below
-       will detect the newly signed-in user
+       onAuthStateChanged will receive the user
        and open the dashboard.
       */
-
 
     } catch (error) {
 
@@ -477,6 +504,7 @@ if (loginForm) {
   loginForm.addEventListener("submit", async (event) => {
 
     event.preventDefault();
+
 
     if (!auth) {
 
@@ -518,6 +546,14 @@ if (loginForm) {
 
     try {
 
+      /*
+       Sign the user in.
+
+       IMPORTANT:
+       Firebase persistence is configured below,
+       so this login remains available after refresh.
+      */
+
       const userCredential =
         await signInWithEmailAndPassword(
           auth,
@@ -536,19 +572,16 @@ if (loginForm) {
       );
 
 
-      /*
-       DO NOT show the welcome screen here.
-
-       Firebase onAuthStateChanged will handle
-       opening the dashboard.
-      */
-
       loginMessage.textContent =
         "Login successful!";
 
       loginMessage.style.color =
         "#166534";
 
+
+      /*
+       onAuthStateChanged handles dashboard navigation.
+      */
 
     } catch (error) {
 
@@ -576,13 +609,29 @@ function openDashboard(user) {
   }
 
 
+  /*
+   Make absolutely sure the dashboard exists.
+  */
+
+  if (!dashboardScreen) {
+
+    console.error(
+      "SPEED-EDGE: Dashboard cannot open because #dashboardScreen is missing from index.html."
+    );
+
+    return;
+  }
+
+
   console.log(
     "Opening SPEED-EDGE dashboard for:",
     user.email
   );
 
 
-  /* User email */
+  /* =======================================================
+     USER EMAIL
+     ======================================================= */
 
   if (dashboardUserEmail) {
 
@@ -592,12 +641,15 @@ function openDashboard(user) {
   }
 
 
-  /* Welcome message */
+  /* =======================================================
+     WELCOME MESSAGE
+     ======================================================= */
 
   if (dashboardWelcome) {
 
     const name =
       user.displayName ||
+      user.email?.split("@")[0] ||
       "Welcome";
 
     dashboardWelcome.textContent =
@@ -606,7 +658,9 @@ function openDashboard(user) {
   }
 
 
-  /* Profile */
+  /* =======================================================
+     PROFILE
+     ======================================================= */
 
   if (profileName) {
 
@@ -635,27 +689,21 @@ function openDashboard(user) {
   }
 
 
-  /* Dashboard counters */
+  /* =======================================================
+     DASHBOARD COUNTERS
+     ======================================================= */
 
   const totalDeliveries =
-    document.getElementById(
-      "totalDeliveries"
-    );
+    document.getElementById("totalDeliveries");
 
   const activeRiders =
-    document.getElementById(
-      "activeRiders"
-    );
+    document.getElementById("activeRiders");
 
   const totalCustomers =
-    document.getElementById(
-      "totalCustomers"
-    );
+    document.getElementById("totalCustomers");
 
   const pendingDeliveries =
-    document.getElementById(
-      "pendingDeliveries"
-    );
+    document.getElementById("pendingDeliveries");
 
 
   if (totalDeliveries) {
@@ -675,7 +723,9 @@ function openDashboard(user) {
   }
 
 
-  /* Finally show dashboard */
+  /* =======================================================
+     SHOW DASHBOARD
+     ======================================================= */
 
   showScreen(dashboardScreen);
 
@@ -683,27 +733,77 @@ function openDashboard(user) {
 
 
 /* =========================================================
-   AUTHENTICATION STATE
+   FIREBASE AUTH PERSISTENCE
    ========================================================= */
 
-if (auth) {
+async function configureAuthentication() {
+
+  if (!auth) {
+
+    console.error(
+      "SPEED-EDGE: Firebase Auth is unavailable."
+    );
+
+    return;
+  }
+
+
+  try {
+
+    /*
+     THIS IS IMPORTANT.
+
+     browserLocalPersistence tells Firebase:
+
+     "Keep this user's login on this browser,
+      even when the page is refreshed or closed."
+
+     The user remains signed in until they explicitly
+     sign out or the browser/site data is cleared.
+    */
+
+    await setPersistence(
+      auth,
+      browserLocalPersistence
+    );
+
+
+    console.log(
+      "SPEED-EDGE: Local authentication persistence enabled."
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "SPEED-EDGE: Could not enable authentication persistence.",
+      error
+    );
+
+  }
+
+
+  /* =======================================================
+     AUTH STATE LISTENER
+     ======================================================= */
 
   onAuthStateChanged(auth, (user) => {
 
     if (user) {
 
       console.log(
-        "Authenticated user detected:",
+        "SPEED-EDGE: Existing authenticated user restored:",
         user.email
       );
 
-      /*
-       This is the most important part.
 
-       If the user has already logged in,
-       including after refreshing the page,
-       Firebase gives us the user here and
-       we open the dashboard.
+      /*
+       Firebase remembered the user.
+
+       Therefore, after refresh:
+       LOGIN → DASHBOARD
+       instead of:
+       LOGIN → WELCOME
       */
 
       openDashboard(user);
@@ -711,12 +811,13 @@ if (auth) {
     } else {
 
       console.log(
-        "No authenticated SPEED-EDGE user."
+        "SPEED-EDGE: No authenticated user."
       );
 
+
       /*
-       Only show the welcome page when there
-       is genuinely no signed-in user.
+       Only show the welcome page when there really
+       is no logged-in Firebase user.
       */
 
       showScreen(welcomeScreen);
@@ -746,19 +847,19 @@ if (logoutBtn) {
       await signOut(auth);
 
       console.log(
-        "SPEED-EDGE user signed out."
+        "SPEED-EDGE: User signed out."
       );
 
 
       /*
-       onAuthStateChanged will automatically
-       show the welcome screen.
+       onAuthStateChanged automatically shows
+       the welcome screen.
       */
 
     } catch (error) {
 
       console.error(
-        "Sign out error:",
+        "SPEED-EDGE: Sign out error:",
         error
       );
 
@@ -793,8 +894,6 @@ dashboardTabs.forEach((tab) => {
       tab.dataset.section;
 
 
-    /* Remove active from all tabs */
-
     dashboardTabs.forEach((item) => {
 
       item.classList.remove("active");
@@ -802,16 +901,12 @@ dashboardTabs.forEach((tab) => {
     });
 
 
-    /* Hide all dashboard sections */
-
     dashboardSections.forEach((section) => {
 
       section.classList.remove("active");
 
     });
 
-
-    /* Activate selected tab */
 
     tab.classList.add("active");
 
@@ -838,7 +933,7 @@ dashboardTabs.forEach((tab) => {
 
 
 /* =========================================================
-   QUICK ACTION BUTTONS
+   QUICK ACTIONS
    ========================================================= */
 
 const quickActions =
@@ -873,8 +968,11 @@ quickActions.forEach((button) => {
 
 
 /* =========================================================
-   STARTUP MESSAGE
+   START APPLICATION
    ========================================================= */
+
+configureAuthentication();
+
 
 console.log(
   "SPEED-EDGE application loaded successfully."
