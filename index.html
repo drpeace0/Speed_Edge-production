@@ -1,789 +1,1037 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+/* =========================================================
+   SPEED-EDGE LOGISTICS
+   Firebase Authentication + Persistent Dashboard
+   ========================================================= */
 
-  <meta name="theme-color" content="#f5c400">
-  <meta
-    name="description"
-    content="SPEED-EDGE Logistics - Fast, safe and reliable delivery."
-  >
+import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-  <title>SPEED-EDGE Logistics</title>
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+  onAuthStateChanged,
+  signOut,
+  setPersistence,
+  browserLocalPersistence
+} from
+  "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  <link rel="stylesheet" href="style.css">
 
-  <style>
-    /* =====================================================
-       SPEED-EDGE DASHBOARD
-       These styles make the post-login interface work even
-       if the existing style.css does not contain dashboard CSS.
-       ===================================================== */
+/* =========================================================
+   FIREBASE CONFIGURATION
+   ========================================================= */
 
-    .hidden {
-      display: none !important;
+const firebaseConfig = {
+  apiKey: "AIzaSyAOh1ZWCr8zR-09Rol9JQa4Vnp07VMMA_U",
+  authDomain: "speed-edge-logistics.firebaseapp.com",
+  projectId: "speed-edge-logistics",
+  storageBucket: "speed-edge-logistics.firebasestorage.app",
+  messagingSenderId: "476368822322",
+  appId: "1:476368822322:web:c7e089ac7c418fa54f1c2b",
+  measurementId: "G-SY7CD8EP3K"
+};
+
+
+/* =========================================================
+   INITIALIZE FIREBASE
+   ========================================================= */
+
+let app = null;
+let auth = null;
+
+try {
+
+  app = initializeApp(firebaseConfig);
+
+  auth = getAuth(app);
+
+  console.log(
+    "SPEED-EDGE Firebase initialized successfully."
+  );
+
+} catch (error) {
+
+  console.error(
+    "SPEED-EDGE Firebase initialization failed:",
+    error
+  );
+
+}
+
+
+/* =========================================================
+   GET HTML ELEMENTS
+   ========================================================= */
+
+const welcomeScreen =
+  document.getElementById("welcomeScreen");
+
+const loginScreen =
+  document.getElementById("loginScreen");
+
+const signupScreen =
+  document.getElementById("signupScreen");
+
+const dashboardScreen =
+  document.getElementById("dashboardScreen");
+
+
+const signInBtn =
+  document.getElementById("signInBtn");
+
+const createAccountBtn =
+  document.getElementById("createAccountBtn");
+
+const backFromLogin =
+  document.getElementById("backFromLogin");
+
+const backFromSignup =
+  document.getElementById("backFromSignup");
+
+
+const loginForm =
+  document.getElementById("loginForm");
+
+const signupForm =
+  document.getElementById("signupForm");
+
+
+const loginMessage =
+  document.getElementById("loginMessage");
+
+const signupMessage =
+  document.getElementById("signupMessage");
+
+
+const loginEmail =
+  document.getElementById("loginEmail");
+
+const loginPassword =
+  document.getElementById("loginPassword");
+
+
+const signupName =
+  document.getElementById("signupName");
+
+const signupEmail =
+  document.getElementById("signupEmail");
+
+const signupPassword =
+  document.getElementById("signupPassword");
+
+
+const logoutBtn =
+  document.getElementById("logoutBtn");
+
+
+const dashboardUserEmail =
+  document.getElementById("dashboardUserEmail");
+
+const dashboardWelcome =
+  document.getElementById("dashboardWelcome");
+
+
+const profileName =
+  document.getElementById("profileName");
+
+const profileEmail =
+  document.getElementById("profileEmail");
+
+const profileUid =
+  document.getElementById("profileUid");
+
+
+/* =========================================================
+   SCREEN NAVIGATION
+   ========================================================= */
+
+function hideAllScreens() {
+
+  [
+    welcomeScreen,
+    loginScreen,
+    signupScreen,
+    dashboardScreen
+  ].forEach((screen) => {
+
+    if (screen) {
+      screen.classList.add("hidden");
     }
 
-    #dashboardScreen {
-      min-height: 100vh;
-      background: #f7f7f7;
-      padding: 0;
+  });
+
+}
+
+
+function showScreen(screen) {
+
+  if (!screen) {
+    console.error(
+      "SPEED-EDGE: Requested screen does not exist."
+    );
+    return;
+  }
+
+  hideAllScreens();
+
+  screen.classList.remove("hidden");
+
+  window.scrollTo({
+    top: 0,
+    behavior: "auto"
+  });
+
+}
+
+
+/* =========================================================
+   FRIENDLY FIREBASE ERRORS
+   ========================================================= */
+
+function getFriendlyError(error) {
+
+  console.error(
+    "========== SPEED-EDGE FIREBASE ERROR =========="
+  );
+
+  console.error(
+    "Error code:",
+    error?.code
+  );
+
+  console.error(
+    "Error message:",
+    error?.message
+  );
+
+  console.error(
+    "Full error:",
+    error
+  );
+
+  console.error(
+    "==============================================="
+  );
+
+
+  switch (error?.code) {
+
+    case "auth/email-already-in-use":
+      return "An account already exists with this email address.";
+
+    case "auth/invalid-email":
+      return "Please enter a valid email address.";
+
+    case "auth/weak-password":
+      return "Your password is too weak. Please use at least 6 characters.";
+
+    case "auth/invalid-credential":
+      return "The email or password is incorrect.";
+
+    case "auth/user-not-found":
+      return "No account was found with this email address.";
+
+    case "auth/wrong-password":
+      return "The password is incorrect.";
+
+    case "auth/network-request-failed":
+      return "Firebase could not connect. Please check your internet connection.";
+
+    case "auth/too-many-requests":
+      return "Too many attempts. Please wait and try again later.";
+
+    case "auth/operation-not-allowed":
+      return "Email/password authentication is not enabled in Firebase.";
+
+    case "auth/api-key-not-valid":
+      return "The Firebase API key is not valid or is restricted incorrectly.";
+
+    case "auth/app-not-authorized":
+      return "This website is not authorized in Firebase.";
+
+    case "auth/invalid-api-key":
+      return "The Firebase API key is invalid.";
+
+    case "auth/internal-error":
+      return "Firebase returned an internal error. Please try again.";
+
+    default:
+      return (
+        "Firebase error: " +
+        (error?.code || "unknown error")
+      );
+
+  }
+
+}
+
+
+/* =========================================================
+   WELCOME → LOGIN
+   ========================================================= */
+
+if (signInBtn) {
+
+  signInBtn.addEventListener("click", () => {
+
+    if (loginMessage) {
+      loginMessage.textContent = "";
     }
 
-    .dashboard-header {
-      background: #111;
-      color: white;
-      padding: 18px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+    showScreen(loginScreen);
+
+  });
+
+}
+
+
+/* =========================================================
+   WELCOME → CREATE ACCOUNT
+   ========================================================= */
+
+if (createAccountBtn) {
+
+  createAccountBtn.addEventListener("click", () => {
+
+    if (signupMessage) {
+      signupMessage.textContent = "";
     }
 
-    .dashboard-brand {
-      font-size: 23px;
-      font-weight: 800;
+    showScreen(signupScreen);
+
+  });
+
+}
+
+
+/* =========================================================
+   BACK → WELCOME
+   ========================================================= */
+
+if (backFromLogin) {
+
+  backFromLogin.addEventListener("click", () => {
+
+    if (loginMessage) {
+      loginMessage.textContent = "";
     }
 
-    .dashboard-brand span {
-      color: #f5c400;
+    showScreen(welcomeScreen);
+
+  });
+
+}
+
+
+if (backFromSignup) {
+
+  backFromSignup.addEventListener("click", () => {
+
+    if (signupMessage) {
+      signupMessage.textContent = "";
     }
 
-    .user-area {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    showScreen(welcomeScreen);
 
-    #dashboardUserEmail {
-      font-size: 13px;
-      color: #ddd;
-      max-width: 180px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+  });
 
-    .logout-btn {
-      border: none;
-      background: #f5c400;
-      color: #111;
-      padding: 10px 15px;
-      border-radius: 9px;
-      font-weight: 700;
-      cursor: pointer;
-    }
+}
 
-    .dashboard-content {
-      padding: 22px 18px 40px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
 
-    .dashboard-welcome {
-      margin-bottom: 22px;
-    }
+/* =========================================================
+   OPEN DASHBOARD
+   ========================================================= */
 
-    .dashboard-welcome h1 {
-      margin: 0 0 6px;
-      font-size: 28px;
-      color: #111;
-    }
+function openDashboard(user) {
 
-    .dashboard-welcome p {
-      margin: 0;
-      color: #666;
-    }
+  if (!user) {
+    return;
+  }
 
-    .dashboard-nav {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      margin-bottom: 22px;
-      padding-bottom: 5px;
-    }
 
-    .dashboard-nav button {
-      flex-shrink: 0;
-      border: 1px solid #ddd;
-      background: white;
-      color: #333;
-      padding: 11px 16px;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-    }
+  console.log(
+    "Opening SPEED-EDGE dashboard."
+  );
 
-    .dashboard-nav button.active {
-      background: #f5c400;
-      border-color: #f5c400;
-      color: #111;
-    }
+  console.log(
+    "User:",
+    user.email
+  );
 
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
+  console.log(
+    "UID:",
+    user.uid
+  );
 
-    .stat-card {
-      background: white;
-      border-radius: 14px;
-      padding: 18px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    }
 
-    .stat-card small {
-      display: block;
-      color: #777;
-      margin-bottom: 8px;
-    }
+  /* -----------------------------------------
+     EMAIL
+     ----------------------------------------- */
 
-    .stat-card strong {
-      display: block;
-      font-size: 27px;
-      color: #111;
-    }
+  if (dashboardUserEmail) {
 
-    .dashboard-panel {
-      background: white;
-      border-radius: 14px;
-      padding: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-      margin-bottom: 18px;
-    }
+    dashboardUserEmail.textContent =
+      user.email || "";
 
-    .dashboard-panel h2 {
-      margin-top: 0;
-      color: #111;
-      font-size: 21px;
-    }
+  }
 
-    .quick-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
 
-    .quick-action {
-      border: 1px solid #ddd;
-      background: #fafafa;
-      padding: 17px;
-      border-radius: 12px;
-      cursor: pointer;
-      text-align: left;
-      font-weight: 700;
-    }
+  /* -----------------------------------------
+     WELCOME NAME
+     ----------------------------------------- */
 
-    .quick-action:hover {
-      border-color: #f5c400;
-    }
+  if (dashboardWelcome) {
 
-    .dashboard-section {
-      display: none;
-    }
+    const name =
+      user.displayName ||
+      "Welcome";
 
-    .dashboard-section.active {
-      display: block;
-    }
+    dashboardWelcome.textContent =
+      `Welcome, ${name} 👋`;
 
-    .empty-state {
-      text-align: center;
-      padding: 35px 15px;
-      color: #777;
-    }
+  }
 
-    .profile-row {
-      padding: 13px 0;
-      border-bottom: 1px solid #eee;
-    }
 
-    .profile-row:last-child {
-      border-bottom: none;
-    }
+  /* -----------------------------------------
+     PROFILE
+     ----------------------------------------- */
 
-    .profile-row small {
-      display: block;
-      color: #888;
-      margin-bottom: 4px;
-    }
+  if (profileName) {
 
-    .profile-row strong {
-      color: #222;
-      word-break: break-word;
-    }
+    profileName.textContent =
+      user.displayName ||
+      "Not provided";
 
-    @media (min-width: 700px) {
-      .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
+  }
+
+
+  if (profileEmail) {
+
+    profileEmail.textContent =
+      user.email ||
+      "Not provided";
+
+  }
+
+
+  if (profileUid) {
+
+    profileUid.textContent =
+      user.uid ||
+      "Not available";
+
+  }
+
+
+  /* -----------------------------------------
+     DASHBOARD COUNTERS
+     ----------------------------------------- */
+
+  const totalDeliveries =
+    document.getElementById(
+      "totalDeliveries"
+    );
+
+  const activeRiders =
+    document.getElementById(
+      "activeRiders"
+    );
+
+  const totalCustomers =
+    document.getElementById(
+      "totalCustomers"
+    );
+
+  const pendingDeliveries =
+    document.getElementById(
+      "pendingDeliveries"
+    );
+
+
+  if (totalDeliveries) {
+    totalDeliveries.textContent = "0";
+  }
+
+  if (activeRiders) {
+    activeRiders.textContent = "0";
+  }
+
+  if (totalCustomers) {
+    totalCustomers.textContent = "0";
+  }
+
+  if (pendingDeliveries) {
+    pendingDeliveries.textContent = "0";
+  }
+
+
+  /* -----------------------------------------
+     FINANCE
+     ----------------------------------------- */
+
+  const financeCompleted =
+    document.getElementById(
+      "financeCompleted"
+    );
+
+  const financePending =
+    document.getElementById(
+      "financePending"
+    );
+
+
+  if (financeCompleted) {
+    financeCompleted.textContent = "0";
+  }
+
+  if (financePending) {
+    financePending.textContent = "0";
+  }
+
+
+  /* -----------------------------------------
+     SHOW DASHBOARD
+     ----------------------------------------- */
+
+  showScreen(dashboardScreen);
+
+}
+
+
+/* =========================================================
+   CREATE ACCOUNT
+   ========================================================= */
+
+if (signupForm) {
+
+  signupForm.addEventListener(
+    "submit",
+    async (event) => {
+
+      event.preventDefault();
+
+
+      if (!auth) {
+
+        signupMessage.textContent =
+          "Firebase is not initialized.";
+
+        signupMessage.style.color =
+          "#b42318";
+
+        return;
+
       }
 
-      .quick-actions {
-        grid-template-columns: repeat(4, 1fr);
+
+      const name =
+        signupName.value.trim();
+
+      const email =
+        signupEmail.value.trim();
+
+      const password =
+        signupPassword.value;
+
+
+      if (!name) {
+
+        signupMessage.textContent =
+          "Please enter your full name.";
+
+        signupMessage.style.color =
+          "#b42318";
+
+        return;
+
       }
 
-      .dashboard-content {
-        padding: 30px;
+
+      if (!email) {
+
+        signupMessage.textContent =
+          "Please enter your email address.";
+
+        signupMessage.style.color =
+          "#b42318";
+
+        return;
+
       }
+
+
+      if (password.length < 6) {
+
+        signupMessage.textContent =
+          "Your password must contain at least 6 characters.";
+
+        signupMessage.style.color =
+          "#b42318";
+
+        return;
+
+      }
+
+
+      signupMessage.textContent =
+        "Creating your account...";
+
+      signupMessage.style.color =
+        "#555";
+
+
+      try {
+
+        const userCredential =
+          await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+
+
+        const user =
+          userCredential.user;
+
+
+        if (name) {
+
+          await updateProfile(user, {
+            displayName: name
+          });
+
+        }
+
+
+        console.log(
+          "SPEED-EDGE account created:",
+          user.uid
+        );
+
+
+        /*
+         Firebase has now authenticated the user.
+
+         onAuthStateChanged will open the dashboard.
+        */
+
+      } catch (error) {
+
+        signupMessage.textContent =
+          getFriendlyError(error);
+
+        signupMessage.style.color =
+          "#b42318";
+
+      }
+
     }
-  </style>
-</head>
+  );
 
-<body>
+}
 
-  <main class="app">
 
-    <!-- =====================================================
-         WELCOME SCREEN
-         ===================================================== -->
-    <section id="welcomeScreen" class="screen">
-
-      <div class="hero">
-
-        <div class="logo">
-          SPEED<span>-EDGE</span>
-        </div>
+/* =========================================================
+   SIGN IN
+   ========================================================= */
 
-        <div class="delivery-icon">
-          🚚
-        </div>
+if (loginForm) {
 
-        <h1>Deliver with confidence.</h1>
+  loginForm.addEventListener(
+    "submit",
+    async (event) => {
 
-        <p>
-          Fast, safe and reliable delivery at your fingertips.
-        </p>
+      event.preventDefault();
 
-      </div>
 
-      <div class="actions">
+      if (!auth) {
 
-        <button
-          id="signInBtn"
-          class="primary-btn"
-          type="button"
-        >
-          Sign In
-        </button>
+        loginMessage.textContent =
+          "Firebase is not initialized.";
 
-        <button
-          id="createAccountBtn"
-          class="secondary-btn"
-          type="button"
-        >
-          Create Account
-        </button>
+        loginMessage.style.color =
+          "#b42318";
 
-      </div>
+        return;
 
-    </section>
+      }
 
 
-    <!-- =====================================================
-         LOGIN SCREEN
-         ===================================================== -->
-    <section id="loginScreen" class="screen hidden">
+      const email =
+        loginEmail.value.trim();
 
-      <button
-        id="backFromLogin"
-        class="back-btn"
-        type="button"
-      >
-        ← Back
-      </button>
+      const password =
+        loginPassword.value;
 
-      <div class="form-container">
 
-        <div class="logo small-logo">
-          SPEED<span>-EDGE</span>
-        </div>
+      if (!email || !password) {
 
-        <h2>Welcome back 👋</h2>
+        loginMessage.textContent =
+          "Please enter your email and password.";
 
-        <p class="subtitle">
-          Sign in to manage your deliveries.
-        </p>
+        loginMessage.style.color =
+          "#b42318";
 
-        <form id="loginForm">
+        return;
 
-          <label for="loginEmail">
-            Email address
-          </label>
-
-          <input
-            id="loginEmail"
-            type="email"
-            placeholder="you@example.com"
-            autocomplete="email"
-            required
-          >
-
-          <label for="loginPassword">
-            Password
-          </label>
-
-          <input
-            id="loginPassword"
-            type="password"
-            placeholder="Enter your password"
-            autocomplete="current-password"
-            required
-          >
+      }
 
-          <button
-            type="submit"
-            class="primary-btn"
-            id="loginSubmitBtn"
-          >
-            Sign In
-          </button>
 
-          <p id="loginMessage" class="message"></p>
+      loginMessage.textContent =
+        "Signing you in...";
 
-        </form>
+      loginMessage.style.color =
+        "#555";
 
-      </div>
 
-    </section>
+      try {
 
+        const userCredential =
+          await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
 
-    <!-- =====================================================
-         SIGN UP SCREEN
-         ===================================================== -->
-    <section id="signupScreen" class="screen hidden">
 
-      <button
-        id="backFromSignup"
-        class="back-btn"
-        type="button"
-      >
-        ← Back
-      </button>
+        const user =
+          userCredential.user;
 
-      <div class="form-container">
 
-        <div class="logo small-logo">
-          SPEED<span>-EDGE</span>
-        </div>
+        console.log(
+          "SPEED-EDGE sign-in successful."
+        );
 
-        <h2>Create your account 🚀</h2>
+        console.log(
+          "Authenticated user:",
+          user.email
+        );
 
-        <p class="subtitle">
-          Start sending packages with SPEED-EDGE.
-        </p>
+        console.log(
+          "UID:",
+          user.uid
+        );
 
-        <form id="signupForm">
 
-          <label for="signupName">
-            Full name
-          </label>
+        /*
+         IMPORTANT:
 
-          <input
-            id="signupName"
-            type="text"
-            placeholder="Your full name"
-            required
-          >
+         We do NOT manually show the dashboard here.
 
-          <label for="signupEmail">
-            Email address
-          </label>
+         Firebase persistence + onAuthStateChanged
+         will handle it.
+        */
 
-          <input
-            id="signupEmail"
-            type="email"
-            placeholder="you@example.com"
-            autocomplete="email"
-            required
-          >
+      } catch (error) {
 
-          <label for="signupPassword">
-            Password
-          </label>
+        loginMessage.textContent =
+          getFriendlyError(error);
 
-          <input
-            id="signupPassword"
-            type="password"
-            placeholder="Create a password"
-            autocomplete="new-password"
-            minlength="6"
-            required
-          >
+        loginMessage.style.color =
+          "#b42318";
 
-          <button
-            type="submit"
-            class="primary-btn"
-            id="signupSubmitBtn"
-          >
-            Create Account
-          </button>
-
-          <p id="signupMessage" class="message"></p>
-
-        </form>
-
-      </div>
-
-    </section>
+      }
 
+    }
+  );
 
-    <!-- =====================================================
-         POST-LOGIN DASHBOARD
-         ===================================================== -->
-    <section id="dashboardScreen" class="screen hidden">
-
-      <header class="dashboard-header">
-
-        <div class="dashboard-brand">
-          SPEED<span>-EDGE</span>
-        </div>
-
-        <div class="user-area">
-
-          <span id="dashboardUserEmail"></span>
-
-          <button
-            id="logoutBtn"
-            class="logout-btn"
-            type="button"
-          >
-            Sign Out
-          </button>
-
-        </div>
-
-      </header>
-
-
-      <div class="dashboard-content">
-
-        <div class="dashboard-welcome">
+}
 
-          <h1 id="dashboardWelcome">
-            Welcome to SPEED-EDGE 👋
-          </h1>
 
-          <p>
-            Manage your deliveries from one place.
-          </p>
+/* =========================================================
+   FIREBASE AUTH PERSISTENCE
+   ========================================================= */
 
-        </div>
+/*
+   THIS IS THE IMPORTANT FIX.
 
+   browserLocalPersistence tells Firebase:
 
-        <!-- Dashboard Navigation -->
-        <nav class="dashboard-nav">
+   "Remember this user's login in this browser."
 
-          <button
-            type="button"
-            class="dashboard-tab active"
-            data-section="dashboardHome"
-          >
-            Dashboard
-          </button>
-
-          <button
-            type="button"
-            class="dashboard-tab"
-            data-section="deliveriesSection"
-          >
-            Deliveries
-          </button>
-
-          <button
-            type="button"
-            class="dashboard-tab"
-            data-section="ridersSection"
-          >
-            Riders
-          </button>
-
-          <button
-            type="button"
-            class="dashboard-tab"
-            data-section="customersSection"
-          >
-            Customers
-          </button>
-
-          <button
-            type="button"
-            class="dashboard-tab"
-            data-section="financeSection"
-          >
-            Finance
-          </button>
-
-          <button
-            type="button"
-            class="dashboard-tab"
-            data-section="profileSection"
-          >
-            Profile
-          </button>
+   Therefore, when the user refreshes the page,
+   Firebase can restore the authenticated session.
+*/
 
-        </nav>
+async function initializeAuthentication() {
 
-
-        <!-- =================================================
-             DASHBOARD HOME
-             ================================================= -->
-        <div
-          id="dashboardHome"
-          class="dashboard-section active"
-        >
+  if (!auth) {
 
-          <div class="stats-grid">
+    console.error(
+      "SPEED-EDGE: Firebase Auth is unavailable."
+    );
 
-            <div class="stat-card">
-              <small>Total Deliveries</small>
-              <strong id="totalDeliveries">0</strong>
-            </div>
+    showScreen(welcomeScreen);
 
-            <div class="stat-card">
-              <small>Active Riders</small>
-              <strong id="activeRiders">0</strong>
-            </div>
+    return;
 
-            <div class="stat-card">
-              <small>Customers</small>
-              <strong id="totalCustomers">0</strong>
-            </div>
+  }
 
-            <div class="stat-card">
-              <small>Pending</small>
-              <strong id="pendingDeliveries">0</strong>
-            </div>
 
-          </div>
+  try {
 
+    await setPersistence(
+      auth,
+      browserLocalPersistence
+    );
 
-          <div class="dashboard-panel">
 
-            <h2>Quick Actions</h2>
+    console.log(
+      "SPEED-EDGE: Local authentication persistence enabled."
+    );
 
-            <div class="quick-actions">
 
-              <button
-                type="button"
-                class="quick-action"
-                data-section-target="deliveriesSection"
-              >
-                📦<br>
-                View Deliveries
-              </button>
+  } catch (error) {
 
-              <button
-                type="button"
-                class="quick-action"
-                data-section-target="ridersSection"
-              >
-                🛵<br>
-                Riders
-              </button>
+    console.error(
+      "SPEED-EDGE: Could not enable authentication persistence.",
+      error
+    );
 
-              <button
-                type="button"
-                class="quick-action"
-                data-section-target="customersSection"
-              >
-                👥<br>
-                Customers
-              </button>
+  }
 
-              <button
-                type="button"
-                class="quick-action"
-                data-section-target="financeSection"
-              >
-                💰<br>
-                Finance
-              </button>
 
-            </div>
+  /*
+     Listen for Firebase authentication changes.
 
-          </div>
+     This runs:
+     - after login
+     - after account creation
+     - after page refresh
+     - when Firebase restores a saved session
+     - after sign out
+  */
 
+  onAuthStateChanged(
+    auth,
+    (user) => {
 
-          <div class="dashboard-panel">
+      if (user) {
 
-            <h2>Recent Deliveries</h2>
+        console.log(
+          "SPEED-EDGE: Saved Firebase session detected."
+        );
 
-            <div class="empty-state">
-              No deliveries have been recorded yet.
-            </div>
+        console.log(
+          "Logged-in user:",
+          user.email
+        );
 
-          </div>
 
-        </div>
+        openDashboard(user);
 
+      } else {
 
-        <!-- =================================================
-             DELIVERIES
-             ================================================= -->
-        <div
-          id="deliveriesSection"
-          class="dashboard-section"
-        >
+        console.log(
+          "SPEED-EDGE: No logged-in Firebase user."
+        );
 
-          <div class="dashboard-panel">
 
-            <h2>📦 Deliveries</h2>
+        showScreen(welcomeScreen);
 
-            <div class="empty-state">
-              <p>No deliveries available yet.</p>
-              <p>
-                Your delivery records will appear here.
-              </p>
-            </div>
+      }
 
-          </div>
+    },
+    (error) => {
 
-        </div>
+      console.error(
+        "SPEED-EDGE authentication state error:",
+        error
+      );
 
+      showScreen(welcomeScreen);
 
-        <!-- =================================================
-             RIDERS
-             ================================================= -->
-        <div
-          id="ridersSection"
-          class="dashboard-section"
-        >
+    }
+  );
 
-          <div class="dashboard-panel">
+}
 
-            <h2>🛵 Riders</h2>
 
-            <div class="empty-state">
-              <p>No riders available yet.</p>
-              <p>
-                Registered riders will appear here.
-              </p>
-            </div>
+/* =========================================================
+   START FIREBASE AUTHENTICATION
+   ========================================================= */
 
-          </div>
+initializeAuthentication();
 
-        </div>
 
+/* =========================================================
+   SIGN OUT
+   ========================================================= */
 
-        <!-- =================================================
-             CUSTOMERS
-             ================================================= -->
-        <div
-          id="customersSection"
-          class="dashboard-section"
-        >
+if (logoutBtn) {
 
-          <div class="dashboard-panel">
+  logoutBtn.addEventListener(
+    "click",
+    async () => {
 
-            <h2>👥 Customers</h2>
+      if (!auth) {
+        return;
+      }
 
-            <div class="empty-state">
-              <p>No customers available yet.</p>
-              <p>
-                Registered customers will appear here.
-              </p>
-            </div>
 
-          </div>
+      try {
 
-        </div>
+        await signOut(auth);
 
 
-        <!-- =================================================
-             FINANCE
-             ================================================= -->
-        <div
-          id="financeSection"
-          class="dashboard-section"
-        >
+        console.log(
+          "SPEED-EDGE: User signed out."
+        );
 
-          <div class="stats-grid">
 
-            <div class="stat-card">
-              <small>Total Revenue</small>
-              <strong>₦0</strong>
-            </div>
+        /*
+         onAuthStateChanged automatically
+         sends the user back to the welcome screen.
+        */
 
-            <div class="stat-card">
-              <small>Completed</small>
-              <strong id="financeCompleted">0</strong>
-            </div>
+      } catch (error) {
 
-            <div class="stat-card">
-              <small>Pending</small>
-              <strong id="financePending">0</strong>
-            </div>
+        console.error(
+          "SPEED-EDGE sign-out error:",
+          error
+        );
 
-            <div class="stat-card">
-              <small>Commission</small>
-              <strong>₦0</strong>
-            </div>
+      }
 
-          </div>
+    }
+  );
 
-          <div class="dashboard-panel">
+}
 
-            <h2>💰 Finance</h2>
 
-            <div class="empty-state">
-              Financial transactions will appear here.
-            </div>
+/* =========================================================
+   DASHBOARD TAB NAVIGATION
+   ========================================================= */
 
-          </div>
+const dashboardTabs =
+  document.querySelectorAll(
+    ".dashboard-tab"
+  );
 
-        </div>
 
+const dashboardSections =
+  document.querySelectorAll(
+    ".dashboard-section"
+  );
 
-        <!-- =================================================
-             PROFILE
-             ================================================= -->
-        <div
-          id="profileSection"
-          class="dashboard-section"
-        >
 
-          <div class="dashboard-panel">
+dashboardTabs.forEach(
+  (tab) => {
 
-            <h2>👤 My Profile</h2>
+    tab.addEventListener(
+      "click",
+      () => {
 
-            <div class="profile-row">
-              <small>Name</small>
-              <strong id="profileName">—</strong>
-            </div>
+        const targetId =
+          tab.dataset.section;
 
-            <div class="profile-row">
-              <small>Email</small>
-              <strong id="profileEmail">—</strong>
-            </div>
 
-            <div class="profile-row">
-              <small>User ID</small>
-              <strong id="profileUid">—</strong>
-            </div>
+        /*
+           Remove active from every tab.
+        */
 
-            <div class="profile-row">
-              <small>Account Status</small>
-              <strong>Active</strong>
-            </div>
+        dashboardTabs.forEach(
+          (item) => {
 
-          </div>
+            item.classList.remove(
+              "active"
+            );
 
-        </div>
+          }
+        );
 
-      </div>
 
-    </section>
+        /*
+           Hide every dashboard section.
+        */
 
-  </main>
+        dashboardSections.forEach(
+          (section) => {
 
+            section.classList.remove(
+              "active"
+            );
 
-  <!-- IMPORTANT: app.js is loaded as a module -->
-  <script type="module" src="app.js"></script>
+          }
+        );
 
-</body>
-  </html>
+
+        /*
+           Activate selected tab.
+        */
+
+        tab.classList.add(
+          "active"
+        );
+
+
+        const target =
+          document.getElementById(
+            targetId
+          );
+
+
+        if (target) {
+
+          target.classList.add(
+            "active"
+          );
+
+        }
+
+      }
+    );
+
+  }
+);
+
+
+/* =========================================================
+   QUICK ACTION BUTTONS
+   ========================================================= */
+
+const quickActions =
+  document.querySelectorAll(
+    ".quick-action"
+  );
+
+
+quickActions.forEach(
+  (button) => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        const targetId =
+          button.dataset.sectionTarget;
+
+
+        const matchingTab =
+          document.querySelector(
+            `.dashboard-tab[data-section="${targetId}"]`
+          );
+
+
+        if (matchingTab) {
+
+          matchingTab.click();
+
+        }
+
+      }
+    );
+
+  }
+);
+
+
+/* =========================================================
+   APPLICATION LOADED
+   ========================================================= */
+
+console.log(
+  "SPEED-EDGE application loaded successfully."
+);
