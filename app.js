@@ -1,6 +1,6 @@
 /* =========================================================
    SPEED-EDGE LOGISTICS
-   Firebase Authentication + Persistent Login + Dashboard
+   Firebase Authentication + Persistent Dashboard
    ========================================================= */
 
 import { initializeApp } from
@@ -8,13 +8,13 @@ import { initializeApp } from
 
 import {
   getAuth,
-  setPersistence,
-  browserLocalPersistence,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
   onAuthStateChanged,
-  signOut
+  signOut,
+  setPersistence,
+  browserLocalPersistence
 } from
   "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -58,11 +58,16 @@ try {
     error
   );
 
+  alert(
+    "SPEED-EDGE could not initialize Firebase. " +
+    "Please check the Firebase configuration."
+  );
+
 }
 
 
 /* =========================================================
-   HTML ELEMENTS
+   GET HTML ELEMENTS
    ========================================================= */
 
 const welcomeScreen =
@@ -144,58 +149,41 @@ const profileUid =
 
 
 /* =========================================================
-   CHECK DASHBOARD
-   ========================================================= */
-
-if (!dashboardScreen) {
-
-  console.error(
-    "SPEED-EDGE ERROR: #dashboardScreen was not found in index.html."
-  );
-
-}
-
-
-/* =========================================================
    SCREEN NAVIGATION
    ========================================================= */
 
 function hideAllScreens() {
 
-  [
-    welcomeScreen,
-    loginScreen,
-    signupScreen,
-    dashboardScreen
-  ].forEach((screen) => {
+  if (welcomeScreen) {
+    welcomeScreen.classList.add("hidden");
+  }
 
-    if (screen) {
-      screen.classList.add("hidden");
-    }
+  if (loginScreen) {
+    loginScreen.classList.add("hidden");
+  }
 
-  });
+  if (signupScreen) {
+    signupScreen.classList.add("hidden");
+  }
+
+  if (dashboardScreen) {
+    dashboardScreen.classList.add("hidden");
+  }
 
 }
 
 
 function showScreen(screen) {
 
-  if (!screen) {
-
-    console.error(
-      "SPEED-EDGE: Tried to display a screen that does not exist."
-    );
-
-    return;
-  }
-
   hideAllScreens();
 
-  screen.classList.remove("hidden");
+  if (screen) {
+    screen.classList.remove("hidden");
+  }
 
   window.scrollTo({
     top: 0,
-    behavior: "instant"
+    behavior: "smooth"
   });
 
 }
@@ -211,9 +199,20 @@ function getFriendlyError(error) {
     "========== SPEED-EDGE FIREBASE ERROR =========="
   );
 
-  console.error("Error code:", error?.code);
-  console.error("Error message:", error?.message);
-  console.error("Full error:", error);
+  console.error(
+    "Error code:",
+    error?.code
+  );
+
+  console.error(
+    "Error message:",
+    error?.message
+  );
+
+  console.error(
+    "Full error:",
+    error
+  );
 
   console.error(
     "==============================================="
@@ -261,339 +260,15 @@ function getFriendlyError(error) {
     case "auth/internal-error":
       return "Firebase returned an internal error. Please try again.";
 
+    case "auth/persistence-unavailable":
+      return "Your browser could not save the login session.";
+
     default:
       return (
         "Firebase error: " +
         (error?.code || "unknown error")
       );
-
   }
-
-}
-
-
-/* =========================================================
-   WELCOME → LOGIN
-   ========================================================= */
-
-if (signInBtn) {
-
-  signInBtn.addEventListener("click", () => {
-
-    if (loginMessage) {
-      loginMessage.textContent = "";
-    }
-
-    if (loginForm) {
-      loginForm.reset();
-    }
-
-    showScreen(loginScreen);
-
-  });
-
-}
-
-
-/* =========================================================
-   WELCOME → CREATE ACCOUNT
-   ========================================================= */
-
-if (createAccountBtn) {
-
-  createAccountBtn.addEventListener("click", () => {
-
-    if (signupMessage) {
-      signupMessage.textContent = "";
-    }
-
-    if (signupForm) {
-      signupForm.reset();
-    }
-
-    showScreen(signupScreen);
-
-  });
-
-}
-
-
-/* =========================================================
-   BACK → WELCOME
-   ========================================================= */
-
-if (backFromLogin) {
-
-  backFromLogin.addEventListener("click", () => {
-
-    if (loginMessage) {
-      loginMessage.textContent = "";
-    }
-
-    showScreen(welcomeScreen);
-
-  });
-
-}
-
-
-if (backFromSignup) {
-
-  backFromSignup.addEventListener("click", () => {
-
-    if (signupMessage) {
-      signupMessage.textContent = "";
-    }
-
-    showScreen(welcomeScreen);
-
-  });
-
-}
-
-
-/* =========================================================
-   CREATE ACCOUNT
-   ========================================================= */
-
-if (signupForm) {
-
-  signupForm.addEventListener("submit", async (event) => {
-
-    event.preventDefault();
-
-
-    if (!auth) {
-
-      signupMessage.textContent =
-        "Firebase is not initialized.";
-
-      signupMessage.style.color =
-        "#b42318";
-
-      return;
-    }
-
-
-    const name =
-      signupName.value.trim();
-
-    const email =
-      signupEmail.value.trim();
-
-    const password =
-      signupPassword.value;
-
-
-    if (!name) {
-
-      signupMessage.textContent =
-        "Please enter your full name.";
-
-      signupMessage.style.color =
-        "#b42318";
-
-      return;
-    }
-
-
-    if (!email) {
-
-      signupMessage.textContent =
-        "Please enter your email address.";
-
-      signupMessage.style.color =
-        "#b42318";
-
-      return;
-    }
-
-
-    if (password.length < 6) {
-
-      signupMessage.textContent =
-        "Your password must contain at least 6 characters.";
-
-      signupMessage.style.color =
-        "#b42318";
-
-      return;
-    }
-
-
-    signupMessage.textContent =
-      "Creating your account...";
-
-    signupMessage.style.color =
-      "#555";
-
-
-    try {
-
-      /*
-       Create Firebase account.
-      Firebase automatically signs the new user in.
-      */
-
-      const userCredential =
-        await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-
-
-      const user =
-        userCredential.user;
-
-
-      /*
-       Save user's name to Firebase Authentication.
-      */
-
-      if (name) {
-
-        await updateProfile(user, {
-          displayName: name
-        });
-
-      }
-
-
-      console.log(
-        "SPEED-EDGE account created:",
-        user.uid
-      );
-
-
-      signupMessage.textContent =
-        "Account created successfully!";
-
-      signupMessage.style.color =
-        "#166534";
-
-
-      /*
-       DO NOT manually navigate.
-
-       onAuthStateChanged will receive the user
-       and open the dashboard.
-      */
-
-    } catch (error) {
-
-      signupMessage.textContent =
-        getFriendlyError(error);
-
-      signupMessage.style.color =
-        "#b42318";
-
-    }
-
-  });
-
-}
-
-
-/* =========================================================
-   SIGN IN
-   ========================================================= */
-
-if (loginForm) {
-
-  loginForm.addEventListener("submit", async (event) => {
-
-    event.preventDefault();
-
-
-    if (!auth) {
-
-      loginMessage.textContent =
-        "Firebase is not initialized.";
-
-      loginMessage.style.color =
-        "#b42318";
-
-      return;
-    }
-
-
-    const email =
-      loginEmail.value.trim();
-
-    const password =
-      loginPassword.value;
-
-
-    if (!email || !password) {
-
-      loginMessage.textContent =
-        "Please enter your email and password.";
-
-      loginMessage.style.color =
-        "#b42318";
-
-      return;
-    }
-
-
-    loginMessage.textContent =
-      "Signing you in...";
-
-    loginMessage.style.color =
-      "#555";
-
-
-    try {
-
-      /*
-       Sign the user in.
-
-       IMPORTANT:
-       Firebase persistence is configured below,
-       so this login remains available after refresh.
-      */
-
-      const userCredential =
-        await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-
-
-      const user =
-        userCredential.user;
-
-
-      console.log(
-        "SPEED-EDGE user signed in:",
-        user.uid
-      );
-
-
-      loginMessage.textContent =
-        "Login successful!";
-
-      loginMessage.style.color =
-        "#166534";
-
-
-      /*
-       onAuthStateChanged handles dashboard navigation.
-      */
-
-    } catch (error) {
-
-      loginMessage.textContent =
-        getFriendlyError(error);
-
-      loginMessage.style.color =
-        "#b42318";
-
-    }
-
-  });
 
 }
 
@@ -609,29 +284,15 @@ function openDashboard(user) {
   }
 
 
-  /*
-   Make absolutely sure the dashboard exists.
-  */
-
-  if (!dashboardScreen) {
-
-    console.error(
-      "SPEED-EDGE: Dashboard cannot open because #dashboardScreen is missing from index.html."
-    );
-
-    return;
-  }
-
-
   console.log(
     "Opening SPEED-EDGE dashboard for:",
     user.email
   );
 
 
-  /* =======================================================
+  /* -------------------------------------------------------
      USER EMAIL
-     ======================================================= */
+     ------------------------------------------------------- */
 
   if (dashboardUserEmail) {
 
@@ -641,15 +302,14 @@ function openDashboard(user) {
   }
 
 
-  /* =======================================================
+  /* -------------------------------------------------------
      WELCOME MESSAGE
-     ======================================================= */
+     ------------------------------------------------------- */
 
   if (dashboardWelcome) {
 
     const name =
       user.displayName ||
-      user.email?.split("@")[0] ||
       "Welcome";
 
     dashboardWelcome.textContent =
@@ -658,9 +318,9 @@ function openDashboard(user) {
   }
 
 
-  /* =======================================================
+  /* -------------------------------------------------------
      PROFILE
-     ======================================================= */
+     ------------------------------------------------------- */
 
   if (profileName) {
 
@@ -689,21 +349,29 @@ function openDashboard(user) {
   }
 
 
-  /* =======================================================
+  /* -------------------------------------------------------
      DASHBOARD COUNTERS
-     ======================================================= */
+     ------------------------------------------------------- */
 
   const totalDeliveries =
-    document.getElementById("totalDeliveries");
+    document.getElementById(
+      "totalDeliveries"
+    );
 
   const activeRiders =
-    document.getElementById("activeRiders");
+    document.getElementById(
+      "activeRiders"
+    );
 
   const totalCustomers =
-    document.getElementById("totalCustomers");
+    document.getElementById(
+      "totalCustomers"
+    );
 
   const pendingDeliveries =
-    document.getElementById("pendingDeliveries");
+    document.getElementById(
+      "pendingDeliveries"
+    );
 
 
   if (totalDeliveries) {
@@ -723,9 +391,33 @@ function openDashboard(user) {
   }
 
 
-  /* =======================================================
+  /* -------------------------------------------------------
+     FINANCE
+     ------------------------------------------------------- */
+
+  const financeCompleted =
+    document.getElementById(
+      "financeCompleted"
+    );
+
+  const financePending =
+    document.getElementById(
+      "financePending"
+    );
+
+
+  if (financeCompleted) {
+    financeCompleted.textContent = "0";
+  }
+
+  if (financePending) {
+    financePending.textContent = "0";
+  }
+
+
+  /* -------------------------------------------------------
      SHOW DASHBOARD
-     ======================================================= */
+     ------------------------------------------------------- */
 
   showScreen(dashboardScreen);
 
@@ -733,98 +425,337 @@ function openDashboard(user) {
 
 
 /* =========================================================
-   FIREBASE AUTH PERSISTENCE
+   WELCOME → LOGIN
    ========================================================= */
 
-async function configureAuthentication() {
+if (signInBtn) {
 
-  if (!auth) {
+  signInBtn.addEventListener(
+    "click",
+    () => {
 
-    console.error(
-      "SPEED-EDGE: Firebase Auth is unavailable."
-    );
+      if (loginMessage) {
+        loginMessage.textContent = "";
+      }
 
-    return;
-  }
+      showScreen(loginScreen);
 
+    }
+  );
 
-  try {
-
-    /*
-     THIS IS IMPORTANT.
-
-     browserLocalPersistence tells Firebase:
-
-     "Keep this user's login on this browser,
-      even when the page is refreshed or closed."
-
-     The user remains signed in until they explicitly
-     sign out or the browser/site data is cleared.
-    */
-
-    await setPersistence(
-      auth,
-      browserLocalPersistence
-    );
+}
 
 
-    console.log(
-      "SPEED-EDGE: Local authentication persistence enabled."
-    );
+/* =========================================================
+   WELCOME → CREATE ACCOUNT
+   ========================================================= */
+
+if (createAccountBtn) {
+
+  createAccountBtn.addEventListener(
+    "click",
+    () => {
+
+      if (signupMessage) {
+        signupMessage.textContent = "";
+      }
+
+      showScreen(signupScreen);
+
+    }
+  );
+
+}
 
 
-  } catch (error) {
+/* =========================================================
+   BACK FROM LOGIN
+   ========================================================= */
 
-    console.error(
-      "SPEED-EDGE: Could not enable authentication persistence.",
-      error
-    );
+if (backFromLogin) {
 
-  }
+  backFromLogin.addEventListener(
+    "click",
+    () => {
 
+      if (loginMessage) {
+        loginMessage.textContent = "";
+      }
 
-  /* =======================================================
-     AUTH STATE LISTENER
-     ======================================================= */
-
-  onAuthStateChanged(auth, (user) => {
-
-    if (user) {
-
-      console.log(
-        "SPEED-EDGE: Existing authenticated user restored:",
-        user.email
-      );
-
-
-      /*
-       Firebase remembered the user.
-
-       Therefore, after refresh:
-       LOGIN → DASHBOARD
-       instead of:
-       LOGIN → WELCOME
-      */
-
-      openDashboard(user);
-
-    } else {
-
-      console.log(
-        "SPEED-EDGE: No authenticated user."
-      );
-
-
-      /*
-       Only show the welcome page when there really
-       is no logged-in Firebase user.
-      */
+      if (loginForm) {
+        loginForm.reset();
+      }
 
       showScreen(welcomeScreen);
 
     }
+  );
 
-  });
+}
+
+
+/* =========================================================
+   BACK FROM SIGNUP
+   ========================================================= */
+
+if (backFromSignup) {
+
+  backFromSignup.addEventListener(
+    "click",
+    () => {
+
+      if (signupMessage) {
+        signupMessage.textContent = "";
+      }
+
+      if (signupForm) {
+        signupForm.reset();
+      }
+
+      showScreen(welcomeScreen);
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   CREATE ACCOUNT
+   ========================================================= */
+
+if (signupForm) {
+
+  signupForm.addEventListener(
+    "submit",
+    async (event) => {
+
+      event.preventDefault();
+
+
+      if (!auth) {
+
+        signupMessage.textContent =
+          "Firebase is not initialized.";
+
+        signupMessage.style.color =
+          "#b42318";
+
+        return;
+      }
+
+
+      const name =
+        signupName.value.trim();
+
+      const email =
+        signupEmail.value.trim();
+
+      const password =
+        signupPassword.value;
+
+
+      if (!name) {
+
+        signupMessage.textContent =
+          "Please enter your full name.";
+
+        signupMessage.style.color =
+          "#b42318";
+
+        return;
+      }
+
+
+      if (!email) {
+
+        signupMessage.textContent =
+          "Please enter your email address.";
+
+        signupMessage.style.color =
+          "#b42318";
+
+        return;
+      }
+
+
+      if (password.length < 6) {
+
+        signupMessage.textContent =
+          "Your password must contain at least 6 characters.";
+
+        signupMessage.style.color =
+          "#b42318";
+
+        return;
+      }
+
+
+      signupMessage.textContent =
+        "Creating your account...";
+
+      signupMessage.style.color =
+        "#555";
+
+
+      try {
+
+        const userCredential =
+          await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+
+
+        const user =
+          userCredential.user;
+
+
+        if (name) {
+
+          await updateProfile(
+            user,
+            {
+              displayName: name
+            }
+          );
+
+        }
+
+
+        console.log(
+          "SPEED-EDGE account created:",
+          user.uid
+        );
+
+
+        signupMessage.textContent =
+          "Account created successfully!";
+
+        signupMessage.style.color =
+          "#166534";
+
+
+        /*
+         Firebase has automatically signed the
+         new user in.
+
+         onAuthStateChanged will open dashboard.
+        */
+
+      } catch (error) {
+
+        signupMessage.textContent =
+          getFriendlyError(error);
+
+        signupMessage.style.color =
+          "#b42318";
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   SIGN IN
+   ========================================================= */
+
+if (loginForm) {
+
+  loginForm.addEventListener(
+    "submit",
+    async (event) => {
+
+      event.preventDefault();
+
+
+      if (!auth) {
+
+        loginMessage.textContent =
+          "Firebase is not initialized.";
+
+        loginMessage.style.color =
+          "#b42318";
+
+        return;
+      }
+
+
+      const email =
+        loginEmail.value.trim();
+
+      const password =
+        loginPassword.value;
+
+
+      if (!email || !password) {
+
+        loginMessage.textContent =
+          "Please enter your email and password.";
+
+        loginMessage.style.color =
+          "#b42318";
+
+        return;
+      }
+
+
+      loginMessage.textContent =
+        "Signing you in...";
+
+      loginMessage.style.color =
+        "#555";
+
+
+      try {
+
+        const userCredential =
+          await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+
+
+        const user =
+          userCredential.user;
+
+
+        console.log(
+          "SPEED-EDGE user signed in:",
+          user.uid
+        );
+
+
+        loginMessage.textContent =
+          "Login successful!";
+
+        loginMessage.style.color =
+          "#166534";
+
+
+        /*
+         DO NOT manually open dashboard here.
+
+         onAuthStateChanged handles it.
+        */
+
+      } catch (error) {
+
+        loginMessage.textContent =
+          getFriendlyError(error);
+
+        loginMessage.style.color =
+          "#b42318";
+
+      }
+
+    }
+  );
 
 }
 
@@ -835,37 +766,40 @@ async function configureAuthentication() {
 
 if (logoutBtn) {
 
-  logoutBtn.addEventListener("click", async () => {
+  logoutBtn.addEventListener(
+    "click",
+    async () => {
 
-    if (!auth) {
-      return;
+      if (!auth) {
+        return;
+      }
+
+
+      try {
+
+        await signOut(auth);
+
+        console.log(
+          "SPEED-EDGE user signed out."
+        );
+
+
+        /*
+         onAuthStateChanged will show
+         the welcome screen.
+        */
+
+      } catch (error) {
+
+        console.error(
+          "SPEED-EDGE sign out error:",
+          error
+        );
+
+      }
+
     }
-
-
-    try {
-
-      await signOut(auth);
-
-      console.log(
-        "SPEED-EDGE: User signed out."
-      );
-
-
-      /*
-       onAuthStateChanged automatically shows
-       the welcome screen.
-      */
-
-    } catch (error) {
-
-      console.error(
-        "SPEED-EDGE: Sign out error:",
-        error
-      );
-
-    }
-
-  });
+  );
 
 }
 
@@ -886,54 +820,73 @@ const dashboardSections =
   );
 
 
-dashboardTabs.forEach((tab) => {
+dashboardTabs.forEach(
+  (tab) => {
 
-  tab.addEventListener("click", () => {
+    tab.addEventListener(
+      "click",
+      () => {
 
-    const targetId =
-      tab.dataset.section;
-
-
-    dashboardTabs.forEach((item) => {
-
-      item.classList.remove("active");
-
-    });
+        const targetId =
+          tab.dataset.section;
 
 
-    dashboardSections.forEach((section) => {
+        dashboardTabs.forEach(
+          (item) => {
 
-      section.classList.remove("active");
+            item.classList.remove(
+              "active"
+            );
 
-    });
-
-
-    tab.classList.add("active");
-
-
-    const target =
-      document.getElementById(targetId);
+          }
+        );
 
 
-    if (target) {
+        dashboardSections.forEach(
+          (section) => {
 
-      target.classList.add("active");
+            section.classList.remove(
+              "active"
+            );
 
-    }
+          }
+        );
 
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
+        tab.classList.add(
+          "active"
+        );
 
-  });
 
-});
+        const target =
+          document.getElementById(
+            targetId
+          );
+
+
+        if (target) {
+
+          target.classList.add(
+            "active"
+          );
+
+        }
+
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+
+      }
+    );
+
+  }
+);
 
 
 /* =========================================================
-   QUICK ACTIONS
+   QUICK ACTION BUTTONS
    ========================================================= */
 
 const quickActions =
@@ -942,36 +895,170 @@ const quickActions =
   );
 
 
-quickActions.forEach((button) => {
+quickActions.forEach(
+  (button) => {
 
-  button.addEventListener("click", () => {
+    button.addEventListener(
+      "click",
+      () => {
 
-    const targetId =
-      button.dataset.sectionTarget;
-
-
-    const matchingTab =
-      document.querySelector(
-        `.dashboard-tab[data-section="${targetId}"]`
-      );
+        const targetId =
+          button.dataset.sectionTarget;
 
 
-    if (matchingTab) {
+        const matchingTab =
+          document.querySelector(
+            `.dashboard-tab[data-section="${targetId}"]`
+          );
 
-      matchingTab.click();
 
-    }
+        if (matchingTab) {
 
-  });
+          matchingTab.click();
 
-});
+        }
+
+      }
+    );
+
+  }
+);
+
+
+/* =========================================================
+   FIREBASE AUTHENTICATION STARTUP
+   =========================================================
+   
+   THIS IS THE IMPORTANT FIX.
+
+   Firebase will explicitly use browserLocalPersistence.
+   
+   That means:
+   
+   Login
+      ↓
+   Firebase saves authentication locally
+      ↓
+   Close/refresh browser
+      ↓
+   Firebase restores the user
+      ↓
+   onAuthStateChanged receives the user
+      ↓
+   Dashboard opens automatically
+   ========================================================= */
+
+async function startAuthentication() {
+
+  if (!auth) {
+
+    console.error(
+      "SPEED-EDGE authentication cannot start because Firebase Auth is unavailable."
+    );
+
+    showScreen(welcomeScreen);
+
+    return;
+  }
+
+
+  try {
+
+    console.log(
+      "Setting SPEED-EDGE Firebase persistence to browserLocalPersistence..."
+    );
+
+
+    await setPersistence(
+      auth,
+      browserLocalPersistence
+    );
+
+
+    console.log(
+      "SPEED-EDGE Firebase persistence enabled successfully."
+    );
+
+
+    onAuthStateChanged(
+      auth,
+      (user) => {
+
+        if (user) {
+
+          console.log(
+            "SPEED-EDGE authenticated user restored:",
+            user.email
+          );
+
+
+          console.log(
+            "SPEED-EDGE UID:",
+            user.uid
+          );
+
+
+          openDashboard(user);
+
+        } else {
+
+          console.log(
+            "No authenticated SPEED-EDGE user."
+          );
+
+
+          showScreen(
+            welcomeScreen
+          );
+
+        }
+
+      }
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "SPEED-EDGE Firebase persistence failed:",
+      error
+    );
+
+
+    /*
+     Even if persistence cannot be enabled,
+     allow Firebase authentication to continue.
+    */
+
+    onAuthStateChanged(
+      auth,
+      (user) => {
+
+        if (user) {
+
+          openDashboard(user);
+
+        } else {
+
+          showScreen(
+            welcomeScreen
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+}
 
 
 /* =========================================================
    START APPLICATION
    ========================================================= */
 
-configureAuthentication();
+startAuthentication();
 
 
 console.log(
